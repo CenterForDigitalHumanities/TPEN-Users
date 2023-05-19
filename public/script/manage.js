@@ -42,7 +42,7 @@ auth.addEventListener("glossing-authenticated", ev => {
     }
 })
 
-const ROLES = ['public', 'contributor', 'reviewer', 'curator']
+const ROLES = ['public', 'contributor', 'manager']
 
 async function adminOnly(token = window.GOG_USER?.authorization) {
     //You can trust the token.  However, it may have expired.
