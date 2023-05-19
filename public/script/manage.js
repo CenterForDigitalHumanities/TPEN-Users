@@ -6,7 +6,7 @@ import jwt_decode from "/script/jwt.js"
 // const CLIENTID = "z1DuwzGPYKmF7POW9LiAipO5MvKSDERM"
 // const GLOSSING_REDIRECT = origin + "/manage.html"
 // const DOMAIN = "cubap.auth0.com"
-const GLOSSING_USER_ROLES_CLAIM = "http://glossing.rerum.io/user_roles"
+const GLOSSING_USER_ROLES_CLAIM = "http://rerum.io/user_roles"
 
 // /**
 //  * Solely for getting the user profile.
@@ -77,7 +77,7 @@ async function adminOnly(token = window.GOG_USER?.authorization) {
             userList.innerHTML = `
             <h1>${GOG_USER.nickname}</h1>
             <small>${GOG_USER.email}</small>
-            <p>(${GOG_USER['http://glossing.rerum.io/user_roles']?.roles?.map(role=>role.replace(/_/g,'&nbsp;')).join(', ')})</p>
+            <p>(${GOG_USER['http://rerum.io/user_roles']?.roles?.map(role=>role.replace(/_/g,'&nbsp;')).join(', ')})</p>
             <img src="${GOG_USER.picture}">
             `
         }
