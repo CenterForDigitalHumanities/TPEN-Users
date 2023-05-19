@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/startApp.js",
-    "devstart": "node ./bin/startApp.js",
+    "start": "node ./bin/glossing_users.js",
+    "devstart": "node ./bin/glossing_users.js",
     "serverstart": "SET DEBUG=node-js-prototyping:* & npm devstart",
     "retrieve-secrets": "aws-secrets-dotenv createLocalEnvironment prod",
     "test": "jest",
