@@ -1,4 +1,4 @@
-name: RERUM v1 Deploy
+name: Glossing Users Deploy
 on: 
   push:
     branches:
@@ -8,18 +8,18 @@ jobs:
       strategy: 
         matrix:
             node-version: [16]
-            machines: [vlcdhp02, vlcdhprdp02]
+            machines: [vlcdhp02, vlcdhprdp01]
       runs-on: ${{ matrix.machines }}
       steps:
         - uses: actions/checkout@v3
         - run: |
-            if [[ ! -e /srv/node/logs/rerumv1.txt ]]; then
+            if [[ ! -e /srv/node/logs/glossing_users.txt ]]; then
                 mkdir -p /srv/node/logs
-                touch /srv/node/logs/rerumv1.txt
+                touch /srv/node/logs/glossing_users.txt
             fi
-            cd /srv/node/v1-node/
-            pm2 stop rerum_v1
+            cd /srv/node/glossing-users/
+            pm2 stop glossing_users
             git stash
             git pull
             npm install
-            pm2 start -i max bin/rerum_v1.js
+            pm2 start -i max bin/glossing_users.js
