@@ -5,14 +5,11 @@
   "scripts": {
     "start": "node ./bin/glossing_users.js",
     "devstart": "node ./bin/glossing_users.js",
-    "serverstart": "SET DEBUG=node-js-prototyping:* & npm devstart",
-    "retrieve-secrets": "aws-secrets-dotenv createLocalEnvironment prod",
     "test": "jest",
     "runtest": "node ./bin/testApp.js"
   },
   "dependencies": {
     "auth0": "^3.2.0",
-    "aws-secrets-dotenv": "^1.0.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",

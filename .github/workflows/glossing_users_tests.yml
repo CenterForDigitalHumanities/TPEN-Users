@@ -2,10 +2,7 @@ name: Glossing Users Tests
 on: 
   push:
     branches:
-      main
-  pull_request:
-    branches:
-      main
+      TODO
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -22,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: "16"
+          node-version: "21"
 
       # Speed up subsequent runs with caching
       - name: Cache node modules
