@@ -6,44 +6,43 @@
  * It depends how quick tokens will die.
  */
 const webAuth = new auth0.WebAuth({
-    "domain": DOMAIN,
-    "clientID": CLIENTID,
-    "audience": AUDIENCE
+  domain: DOMAIN,
+  clientID: CLIENTID,
+  audience: AUDIENCE,
 })
 let login_beat = null
 function startHeartbeat() {
-    login_beat = setInterval(async function () {
-        if (localStorage.getItem("Glossing-Login-Token")) {
-            webAuth.checkSession({}, (err, result) => {
-                if (err) {
-                    login()
-                    stopHeartbeat()
-                }
-                else {
-                    localStorage.setItem("Glossing-Login-Token", result.accessToken)
-                }
-            })
+  login_beat = setInterval(async function () {
+    if (localStorage.getItem("Tpen-Login-Token")) {
+      webAuth.checkSession({}, (err, result) => {
+        if (err) {
+          login()
+          stopHeartbeat()
+        } else {
+          localStorage.setItem("Tpen-Login-Token", result.accessToken)
         }
-        else {
-            login()
-            //You need to login to start a session!
-        }
-    }, 60000 * 4.5) // These tokens expire every 5 Mins
+      })
+    } else {
+      login()
+      //You need to login to start a session!
+    }
+  }, 60000 * 4.5) // These tokens expire every 5 Mins
 }
 
 function stopHeartbeat() {
-    if (login_beat !== null && login_beat !== undefined) {
-        clearInterval(login_beat)
-    }
+  if (login_beat !== null && login_beat !== undefined) {
+    clearInterval(login_beat)
+  }
 }
 
 function login() {
-    localStorage.removeItem('Glossing-Login-Token')
-    webAuth.authorize({
-        "authParamsMap": { 'app': 'glossing' },
-        "scope": "read:roles update:current_user_metadata read:current_user name nickname picture email profile openid offline_access",
-        "redirectUri": GLOSSING_REDIRECT,
-        "responseType": "id_token token"
-    })
-    stopHeartbeat()
+  localStorage.removeItem("Tpen-Login-Token")
+  webAuth.authorize({
+    authParamsMap: { app: "tpen" },
+    scope:
+      "read:roles update:current_user_metadata read:current_user name nickname picture email profile openid offline_access",
+    redirectUri: TPEN_REDIRECT,
+    responseType: "id_token token",
+  })
+  stopHeartbeat()
 }

@@ -1,32 +1,31 @@
 #!/usr/bin/env node
 
-const ManagementClient = require('auth0').ManagementClient
-const AuthenticationClient = require('auth0').AuthenticationClient
-const express = require('express')
+const ManagementClient = require("auth0").ManagementClient
+const AuthenticationClient = require("auth0").AuthenticationClient
+const express = require("express")
 const router = express.Router()
-const got = require('got')
-
+const got = require("got")
 const ROLES = [
-  process.env.ROLE_MANAGER_ID,
-  process.env.ROLE_CONTRIBUTOR_ID,
-  process.env.ROLE_PUBLIC_ID
-].map(str => str.split(' ')[0])
+  process.env.ROLE_ADMIN_ID, //changed ROLE_CONTRIBUTOR_ID and ROLE_MANAGER_ID to ROLE_ADMIN_ID and ROLE_INACTIVE_ID to start the app. further changes may be required.
+  process.env.ROLE_INACTIVE_ID,
+  process.env.ROLE_PUBLIC_ID,
+].map((str) => str.split(" ")[0])
 
 let manager = new ManagementClient({
   domain: process.env.DOMAIN,
   clientId: process.env.CLIENTID,
   clientSecret: process.env.CLIENT_SECRET,
-  scope: "create:users read:users read:user_idp_tokens update:users delete:users read:roles create:roles update:roles delete:roles"
+  scope:
+    "create:users read:users read:user_idp_tokens update:users delete:users read:roles create:roles update:roles delete:roles",
 })
-
 let authenticator = new AuthenticationClient({
   domain: process.env.DOMAIN,
-  clientId: process.env.CLIENTID
+  clientId: process.env.CLIENTID,
 })
 
 // /**
-//  * Let Glossing Apps Users update THEIR OWN profile info.
-//  * 
+//  * Let Tpen Apps Users update THEIR OWN profile info.
+//  *
 //  * Make sure the user making the request is the user to update.
 //  */
 // router.put('/updateProfileInfo', async function (req, res, next) {
@@ -36,7 +35,7 @@ let authenticator = new AuthenticationClient({
 //   if (token) {
 //     authenticator.getProfile(token)
 //       .then(async (current_user) => {
-//         if (isGlossingUser(current_user)) {
+//         if (isTpenUser(current_user)) {
 //           //The user object is in the body, and the id is present or fail.
 //           let userObj = req.body ?? {}
 //           const userid = userObj.sub ?? userObj.user_id ?? userObj.id ?? ""
@@ -65,7 +64,7 @@ let authenticator = new AuthenticationClient({
 //           }
 //         }
 //         else {
-//           res.status(401).send("You are not a Glossing Apps user, this API is not for you.")
+//           res.status(401).send("You are not a Tpen Apps user, this API is not for you.")
 //         }
 //       })
 //       .catch(err => {
@@ -73,44 +72,49 @@ let authenticator = new AuthenticationClient({
 //       })
 //   }
 //   else {
-//     res.status(403).send("You must be a Glossing Apps user.  Please provide an access token in the Authorization header.")
+//     res.status(403).send("You must be a Tpen Apps user.  Please provide an access token in the Authorization header.")
 //   }
 // })
 
 /**
- * Get all the users from the Auth0 Tenant with app "glossing".
+ * Get all the users from the Auth0 Tenant with app "tpen".
  */
-router.get('/getAllUsers', async function (req, res, next) {
+router.get("/getAllUsers", async function (req, res, next) {
   let token = req.header("Authorization") ?? ""
   token = token.replace("Bearer ", "")
   try {
-    authenticator.getProfile(token)
-      .then(async (current_glossing_users) => {
-        if (!isAdmin(current_glossing_users)) {
+    authenticator
+      .getProfile(token)
+      .then(async (current_tpen_users) => {
+        if (!isAdmin(current_tpen_users)) {
           res.status(403).send("You are not an admin")
           return
         }
 
-        const fetchUsersInRoles = ROLES.map(id => manager.getUsersInRole({ id }))
+        const fetchUsersInRoles = ROLES.map((id) =>
+          manager.getUsersInRole({ id })
+        )
         return Promise.all(fetchUsersInRoles)
-          .then(userGroups => {
-            const roleNames = [
-              "manager",
-              "contributor",
-              "public"
-            ]
-            res.json(userGroups.map((group, index) => group.map(user => {
-              user.role = roleNames[index]
-              return user
-            })).flat())
+          .then((userGroups) => {
+            const roleNames = ["manager", "contributor", "public"]
+            res.json(
+              userGroups
+                .map((group, index) =>
+                  group.map((user) => {
+                    user.role = roleNames[index]
+                    return user
+                  })
+                )
+                .flat()
+            )
             return
           })
-          .catch(err => {
+          .catch((err) => {
             console.error("Error getting users in back end")
             res.status(500).send(err)
           })
       })
-      .catch(err => {
+      .catch((err) => {
         res.status(500)
         next(err)
       })
@@ -121,17 +125,17 @@ router.get('/getAllUsers', async function (req, res, next) {
 })
 
 /**
- * Tell our Glossing Auth0 to assign the given user id to the Glossing Public role.
+ * Tell our Tpen Auth0 to assign the given user id to the Tpen Public role.
  * This limits access token scope.
  * Other roles are removed.
  */
-router.post('/assignRole', async function (req, res, next) {
+router.post("/assignRole", async function (req, res, next) {
   const token = (req.header("Authorization") ?? "")?.replace("Bearer ", "")
   const { userid, role } = req.body
   const roleID = process.env[`ROLE_${String(role).toUpperCase()}_ID`]
 
   // Guards
-  if (role === 'admin') {
+  if (role === "admin") {
     res.status(501).send("No changing Admin roles here")
   }
   if (!userid || !roleID) {
@@ -140,32 +144,43 @@ router.post('/assignRole', async function (req, res, next) {
   }
 
   // Confirm Admin
-  authenticator.getProfile(token)
-    .then(user => {
+  authenticator
+    .getProfile(token)
+    .then((user) => {
       if (!isAdmin(user)) {
         res.status(403).send("Unable to authorize request by non-administrator")
         return
       }
 
-      manager.assignRolestoUser({ id: userid }, { roles: [roleID] })
-        .then(result => {
+      manager
+        .assignRolestoUser({ id: userid }, { roles: [roleID] })
+        .then((result) => {
           // Super odd. On success, the response is an empty string...
-          // unassign from other Glossing roles
-          const dataObj = { roles: ROLES.filter(justAdded => justAdded !== roleID) }
+          // unassign from other Tpen roles
+          const dataObj = {
+            roles: ROLES.filter((justAdded) => justAdded !== roleID),
+          }
 
-          manager.removeRolesFromUser({ id: userid }, dataObj)
-            .then(resp2 => {
-              res.status(200).send(`${role[0].toUpperCase()}${role.substr(1)} role was successfully assigned to the user`)
+          manager
+            .removeRolesFromUser({ id: userid }, dataObj)
+            .then((resp2) => {
+              res
+                .status(200)
+                .send(
+                  `${role[0].toUpperCase()}${role.substr(
+                    1
+                  )} role was successfully assigned to the user`
+                )
             })
-            .catch(err => {
+            .catch((err) => {
               res.status(500).send(err)
             })
         })
-        .catch(err => {
+        .catch((err) => {
           res.status(500).send(err)
         })
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(401).send("Unable to authenticate request")
     })
 })
@@ -180,29 +195,31 @@ function getURLHash(variable, url) {
   var vars = query.split("&")
   for (var i = 0; i < vars.length; i++) {
     var pair = vars[i].split("=")
-    if (pair[0] == variable) { return pair[1] }
+    if (pair[0] == variable) {
+      return pair[1]
+    }
   }
   return false
 }
 
 /**
- *  Given a user profile, check if that user is a Glossing Apps admin.
+ *  Given a user profile, check if that user is a Tpen Apps admin.
  */
 function isAdmin(user) {
   let roles = { roles: [] }
-  if (user[process.env.GLOSSING_ROLES_CLAIM]) {
-    roles = user[process.env.GLOSSING_ROLES_CLAIM].roles ?? { roles: [] }
+  if (user[process.env.TPEN3_ROLES_CLAIM]) {
+    roles = user[process.env.TPEN3_ROLES_CLAIM].roles ?? { roles: [] }
   }
-  return roles.includes("glossing_user_admin")
+  return roles.includes("tpen_user_admin")
 }
 
 /**
- *  Given a user profile, check if that user belongs to a Glossing App.
+ *  Given a user profile, check if that user belongs to a Tpen App.
  */
-function isGlossingUser(user) {
+function isTpenUser(user) {
   return (
-    user[process.env.GLOSSING_APP_CLAIM] &&
-    user[process.env.GLOSSING_APP_CLAIM] === "glossing"
+    user[process.env.TPEN3_APP_CLAIM] &&
+    user[process.env.TPEN3_APP_CLAIM] === "tpen"
   )
 }
 

@@ -1,8 +1,7 @@
-name: Glossing Users Tests
-on: 
+name: Tpen Users Tests
+on:
   push:
-    branches:
-      TODO
+    branches: TODO
 jobs:
   test:
     runs-on: ubuntu-latest
