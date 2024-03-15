@@ -21,7 +21,7 @@ module.exports = {
   detectOpenHandles: false,
 
   displayName: {
-    name: "Tpen Users",
+    name: "TPEN Users",
     color: "cyan",
   },
 

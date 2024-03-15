@@ -1,4 +1,4 @@
-name: Tpen Users Tests
+name: TPEN Users Tests
 on:
   push:
     branches: TODO
