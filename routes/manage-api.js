@@ -6,7 +6,7 @@ const express = require("express")
 const router = express.Router()
 const got = require("got")
 const ROLES = [
-  process.env.ROLE_ADMIN_ID, //changed ROLE_CONTRIBUTOR_ID and ROLE_MANAGER_ID to ROLE_ADMIN_ID and ROLE_INACTIVE_ID to start the app. further changes may be required.
+  process.env.ROLE_ADMIN_ID,
   process.env.ROLE_INACTIVE_ID,
   process.env.ROLE_PUBLIC_ID,
 ].map((str) => str.split(" ")[0])
@@ -64,7 +64,7 @@ let authenticator = new AuthenticationClient({
 //           }
 //         }
 //         else {
-//           res.status(401).send("You are not a Tpen Apps user, this API is not for you.")
+//           res.status(401).send("You are not a TPEN Apps user, this API is not for you.")
 //         }
 //       })
 //       .catch(err => {
@@ -72,7 +72,7 @@ let authenticator = new AuthenticationClient({
 //       })
 //   }
 //   else {
-//     res.status(403).send("You must be a Tpen Apps user.  Please provide an access token in the Authorization header.")
+//     res.status(403).send("You must be a TPEN Apps user.  Please provide an access token in the Authorization header.")
 //   }
 // })
 
