@@ -12,7 +12,7 @@
 
 import "https://cdn.auth0.com/js/auth0/9.19.0/auth0.min.js"
 
-const AUDIENCE = "https://cubap.auth0.com/api/v2/" 
+const AUDIENCE = "https://cubap.auth0.com/api/v2/"
 const ISSUER_BASE_URL = "cubap.auth0.com"
 const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
@@ -30,7 +30,7 @@ const webAuth = new auth0.WebAuth({
 
 const logout = () => {
   localStorage.removeItem("userToken")
-  delete window.GOG_USER
+  delete window.TPEN_USER
   document
     .querySelectorAll('[is="auth-creator"]')
     .forEach((el) => el.connectedCallback())
@@ -68,15 +68,15 @@ class AuthButton extends HTMLButtonElement {
         location.href = ref
       }
       localStorage.setItem("userToken", result.idToken)
-      window.GOG_USER = result.idTokenPayload
-      window.GOG_USER.authorization = result.accessToken
+      window.TPEN_USER = result.idTokenPayload
+      window.TPEN_USER.authorization = result.accessToken
       document
         .querySelectorAll('[is="auth-creator"]')
         .forEach((el) => el.connectedCallback())
-      this.innerText = `Logout ${GOG_USER.nickname}`
+      this.innerText = `Logout ${TPEN_USER.nickname}`
       this.removeAttribute("disabled")
       const loginEvent = new CustomEvent("tpen-authenticated", {
-        detail: window.GOG_USER,
+        detail: window.TPEN_USER,
       })
       this.dispatchEvent(loginEvent)
     })
@@ -91,10 +91,10 @@ class AuthCreator extends HTMLInputElement {
   }
 
   connectedCallback() {
-    if (!window.GOG_USER) {
+    if (!window.TPEN_USER) {
       return
     }
-    this.value = GOG_USER["http://store.rerum.io/agent"] ?? "anonymous"
+    this.value = TPEN_USER["http://store.rerum.io/agent"] ?? "anonymous"
   }
 }
 

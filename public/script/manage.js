@@ -48,9 +48,9 @@ auth.addEventListener("tpen-authenticated", (ev) => {
   }
 })
 
-const ROLES = ["public", "contributor", "manager"]
+const ROLES = ["public", "inactive"]
 
-async function adminOnly(token = window.GOG_USER?.authorization) {
+async function adminOnly(token = window.TPEN_USER?.authorization) {
   //You can trust the token.  However, it may have expired.
   //A token was in localStorage, so there was a login during this window session.
   //An access token from login is stored. Let's use it to get THIS USER's info.  If it fails, the user needs to login again.
@@ -61,11 +61,12 @@ async function adminOnly(token = window.GOG_USER?.authorization) {
       let elem = ``
       for (const user of user_arr) {
         //This presumes they will only have one tpen role here.  Make sure getAllUsers() accounts for that.
-        elem += `<li user="${user.name}"><p>${user.name}</p>
+        if (user?.role?.toLowerCase() !== "admin")
+          elem += `<li user="${user.name}"><p>${user.name}</p>
                     <img src="${user.picture}">
                     <span class="role badge " userid="${user.user_id}">${
-          user.role
-        }</span>
+            user.role
+          }</span>
                     <select name="${user.user_id}">
                         ${ROLES.reduce((a, b) => {
                           return (a += `<option
@@ -85,12 +86,12 @@ async function adminOnly(token = window.GOG_USER?.authorization) {
       })
     } else {
       userList.innerHTML = `
-            <h1>${GOG_USER.nickname}</h1>
-            <small>${GOG_USER.email}</small>
-            <p>(${GOG_USER["http://rerum.io/user_roles"]?.roles
+            <h1>${TPEN_USER.nickname}</h1>
+            <small>${TPEN_USER.email}</small>
+            <p>(${TPEN_USER["http://rerum.io/user_roles"]?.roles
               ?.map((role) => role.replace(/_/g, "&nbsp;"))
               .join(", ")})</p>
-            <img src="${GOG_USER.picture}">
+            <img src="${TPEN_USER.picture}">
             `
     }
   } catch (_err) {
@@ -106,7 +107,7 @@ async function assignRole(userid, role) {
     method: "POST",
     cache: "default",
     headers: {
-      Authorization: `Bearer ${window.GOG_USER?.authorization}`,
+      Authorization: `Bearer ${window.TPEN_USER?.authorization}`,
       "Content-Type": "application/json; charset=utf-8",
     },
     body: JSON.stringify({ role, userid }),
@@ -131,7 +132,7 @@ async function assignRole(userid, role) {
 //  * You can only update the user info belonging to the user encoded on the token in the Authorization header
 //  * This means you can only do this to update "your own" profile information.
 //  */
-// async function updateUserInfo(event, userid=window.GOG_USER?.sub) {
+// async function updateUserInfo(event, userid=window.TPEN_USER?.sub) {
 //     event.preventDefault()
 //     let info = new FormData(event.target)
 //     let data = Object.fromEntries(info.entries())
@@ -145,7 +146,7 @@ async function assignRole(userid, role) {
 //             method: 'PUT',
 //             cache: 'default',
 //             headers: {
-//                 'Authorization': `Bearer ${window.GOG_USER?.authorization}`,
+//                 'Authorization': `Bearer ${window.TPEN_USER?.authorization}`,
 //                 'Content-Type': "application/json; charset=utf-8"
 //             },
 //             body: JSON.stringify(data)
@@ -178,11 +179,11 @@ async function assignRole(userid, role) {
  * Use our Auth0 Server back end to ask for all the Dunbap Apps users.
  */
 async function getAllUsers() {
-  return fetch("/tpen-users/manage/getAllUsers", {
+  return await fetch("/tpen-users/manage/getAllUsers", {
     method: "GET",
     cache: "no-store",
     headers: {
-      Authorization: `Bearer ${window.GOG_USER?.authorization}`,
+      Authorization: `Bearer ${window.TPEN_USER?.authorization}`,
     },
   })
     .then((resp) => {

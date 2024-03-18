@@ -96,7 +96,7 @@ router.get("/getAllUsers", async function (req, res, next) {
         )
         return Promise.all(fetchUsersInRoles)
           .then((userGroups) => {
-            const roleNames = ["manager", "contributor", "public"]
+            const roleNames = ["public", "inactive"]
             res.json(
               userGroups
                 .map((group, index) =>
