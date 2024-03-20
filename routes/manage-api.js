@@ -94,27 +94,47 @@ router.get("/getAllUsers", async function (req, res, next) {
         const fetchUsersInRoles = ROLES.map((id) =>
           manager.getUsersInRole({ id })
         )
+
         return Promise.all(fetchUsersInRoles)
           .then((userGroups) => {
-            const roleNames = ["public", "inactive", "admin"]
-            res.json(
-              userGroups
-                .map((group, index) =>
-                  group.map((user) => {
-                    user.role = user.role.push(roleNames[index])
-                    return user
-                  })
-                )
-                .flat()
-            )
-            return
+            const roleNames = ["admin", "inactive", "public"] //the order of this must match the order of ROLES above
+            // res.json(userGroups)
+
+            const mergedUserInfo = {}
+
+            ROLES.map((_, i) => {
+              userGroups.map((eachGroup, j) => {
+                eachGroup.map((user) => {
+                  if (!user.roles) user.roles = []
+                  if (i == j && !user.roles.includes(roleNames[i])) {
+                    user.roles.push(roleNames[i])
+                  }
+
+                  const { email, roles, ...otherProps } = user
+
+                  if (mergedUserInfo[email]) {
+                    mergedUserInfo[email].roles.push(
+                      ...roles.filter(
+                        (role) => !mergedUserInfo[email].roles.includes(role)
+                      )
+                    )
+                  } else {
+                    mergedUserInfo[email] = { email, roles, ...otherProps }
+                  }
+                })
+              })
+            })
+
+            const flattenedUsers = Object.values(mergedUserInfo)
+
+            res.json(flattenedUsers)
           })
           .catch((err) => {
-            console.error("Error getting users in back end")
             res.status(500).send(err)
           })
       })
       .catch((err) => {
+        console.log(err)
         res.status(500)
         next(err)
       })
@@ -158,7 +178,10 @@ router.post("/assignRole", async function (req, res, next) {
           // Super odd. On success, the response is an empty string...
           // unassign from other Tpen roles
           const dataObj = {
-            roles: ROLES.filter((justAdded) => justAdded !== roleID),
+            roles: ROLES.filter(
+              (justAdded) =>
+                justAdded !== roleID && justAdded !== process.env.ROLE_ADMIN_ID
+            ),
           }
 
           manager

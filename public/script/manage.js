@@ -49,7 +49,7 @@ auth.addEventListener("tpen-authenticated", (ev) => {
   }
 })
 
-const ROLES = ["public", "inactive"]
+const ROLES = ["inactive", "public"]
 
 async function adminOnly(token = window.TPEN_USER?.authorization) {
   const intros = document.getElementsByClassName("intro")
@@ -62,26 +62,23 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
     userList.innerHTML = ""
     if (isAdmin(token)) {
       const user_arr = await getAllUsers()
-      console.log(user_arr)
 
       let elem = ``
       for (const user of user_arr) {
-        //This presumes they will only have one tpen role here.  Make sure getAllUsers() accounts for that.
-        elem += `<li user="${user.name}"><p>${user.name}</p>
-                    <img src="${user.picture}">
-                    <span class="role badge " userid="${user.user_id}">${
-          user.role
-        }</span>
-                    <select name="${user.user_id}">
-                        ${ROLES.reduce((a, b) => {
-                          return (a += `<option
-                            ${user.role === b && "selected=true"}
-                            value="${b}">${b}</option>
-                        `)
-                        }, ``)}
-                    </select>
-                </li>
-        `
+        elem += `<li user="${user.name}">
+                <p>${user.name}</p>
+                <img src="${user.picture}">
+                <span class="role badge" userid="${
+                  user.user_id
+                }">${user?.roles?.join(", ")}</span>
+                <select name="${user.user_id}">
+                    ${ROLES.reduce((a, b) => {
+                      return (a += `<option ${
+                        user.roles.includes(b) ? "selected=true" : ""
+                      } value="${b}">${b}</option>`)
+                    }, ``)}
+                </select>
+            </li>`
       }
       listHeading.innerHTML = `<h4> TPEN3 User List</h4>`
       userList.innerHTML += elem
@@ -123,6 +120,7 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
 async function assignRole(userid, role) {
   let url = `/tpen-users/manage/assignRole`
   const roleTag = document.querySelector(`.role[userid="${userid}"]`)
+
   fetch(url, {
     method: "POST",
     cache: "default",
@@ -134,11 +132,18 @@ async function assignRole(userid, role) {
   })
     .then((_resp) => {
       if (!_resp.ok) throw _resp
-      roleTag.innerHTML = role
+      let prevRoles = roleTag.innerHTML.split(/\s+/)
+      let filteredRoles = prevRoles.filter(
+        (role) => role !== (role === "public" ? "public" : "inactive")
+      )
+      filteredRoles.push(role)
+
+      roleTag.innerHTML = filteredRoles.join(" ")
       roleTag.classList.add("badge-success")
       roleTag.classList.remove("badge-danger")
     })
     .catch((err) => {
+      console.log(err)
       roleTag.innerHTML += `⚠`
       roleTag.classList.remove("badge-success")
       roleTag.classList.add("badge-danger")
