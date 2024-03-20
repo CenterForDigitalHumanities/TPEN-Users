@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 const auth = document.querySelector('[is="auth-button"]')
-import jwt_decode from "/script/jwt.js"
 
+import capitalizeName from "../utils/capitalize.js"
+import jwt_decode from "/script/jwt.js"
 // const AUDIENCE = "https://cubap.auth0.com/api/v2/"
 // const CLIENTID = "z1DuwzGPYKmF7POW9LiAipO5MvKSDERM"
 // const TPEN_REDIRECT = origin + "/manage.html"
@@ -51,6 +52,9 @@ auth.addEventListener("tpen-authenticated", (ev) => {
 const ROLES = ["public", "inactive"]
 
 async function adminOnly(token = window.TPEN_USER?.authorization) {
+  const intros = document.getElementsByClassName("intro")
+
+  let userRoles = TPEN_USER["http://rerum.io/user_roles"]?.roles
   //You can trust the token.  However, it may have expired.
   //A token was in localStorage, so there was a login during this window session.
   //An access token from login is stored. Let's use it to get THIS USER's info.  If it fails, the user needs to login again.
@@ -58,15 +62,16 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
     userList.innerHTML = ""
     if (isAdmin(token)) {
       const user_arr = await getAllUsers()
+      console.log(user_arr)
+
       let elem = ``
       for (const user of user_arr) {
         //This presumes they will only have one tpen role here.  Make sure getAllUsers() accounts for that.
-        if (user?.role?.toLowerCase() !== "admin")
-          elem += `<li user="${user.name}"><p>${user.name}</p>
+        elem += `<li user="${user.name}"><p>${user.name}</p>
                     <img src="${user.picture}">
                     <span class="role badge " userid="${user.user_id}">${
-            user.role
-          }</span>
+          user.role
+        }</span>
                     <select name="${user.user_id}">
                         ${ROLES.reduce((a, b) => {
                           return (a += `<option
@@ -78,6 +83,7 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
                 </li>
         `
       }
+      listHeading.innerHTML = `<h4> TPEN3 User List</h4>`
       userList.innerHTML += elem
       userList.querySelectorAll("select").forEach((el) => {
         el.addEventListener("input", (event) =>
@@ -85,13 +91,27 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
         )
       })
     } else {
+      for (let intro of intros) {
+        intro.classList.add("hide-content")
+      }
+
+      listHeading.innerHTML = `<h4>User Profile</h4>`
       userList.innerHTML = `
-            <h1>${TPEN_USER.nickname}</h1>
+           <div>
+            <div>
+            <h5>${TPEN_USER.nickname}  </h5>
             <small>${TPEN_USER.email}</small>
-            <p>(${TPEN_USER["http://rerum.io/user_roles"]?.roles
-              ?.map((role) => role.replace(/_/g, "&nbsp;"))
+
+            </div>
+             <img src="${TPEN_USER.picture}">
+            <p>(${userRoles
+              .map((role) =>
+                role.includes("tpen") ? capitalizeName(role) : null
+              )
+              .filter((role) => role)
               .join(", ")})</p>
-            <img src="${TPEN_USER.picture}">
+
+           </div>
             `
     }
   } catch (_err) {

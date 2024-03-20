@@ -2,64 +2,69 @@
 @import "https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css";
 
 #msg {
-    color: green;
-    font-weight: bold;
+  color: green;
+  font-weight: bold;
 }
 
 html {
-    font-family: 'Open Sans', sans-serif;
-    background-color: #2F353E;
+  font-family: "Open Sans", sans-serif;
+  background-color: #2f353e;
 }
 
 body {
-    background-color: hsl(216, 14%, 91%);
+  background-color: hsl(216, 14%, 91%);
 }
 
-span[data-username]::after{
-    content: attr(data-username);
+span[data-username]::after {
+  content: attr(data-username);
 }
-span[data-nickname]::after{
-    content: attr(data-nickname);
+span[data-nickname]::after {
+  content: attr(data-nickname);
 }
-span[data-email]::after{
-    content: attr(data-email);
+span[data-email]::after {
+  content: attr(data-email);
 }
-span[data-avatar]::after{
-    content: attr(data-avatar);
+span[data-avatar]::after {
+  content: attr(data-avatar);
 }
-
 
 h1 {
-    cursor: pointer;
-    font-weight: 300;
-    font-family: 'Raleway', sans-serif;
-    margin-bottom: 10px;
+  cursor: pointer;
+  font-weight: 300;
+  font-family: "Raleway", sans-serif;
+  margin-bottom: 10px;
 }
 
 .status_header {
-    color: gray;
+  color: gray;
 }
 
-.role{
-    text-transform: capitalize;
+.role {
+  text-transform: capitalize;
 }
 
 .no-break {
-    white-space: nowrap;
+  white-space: nowrap;
 }
-
+#listHeading {
+  padding: 2px 20px;
+}
 #userList li {
-    flex-basis: clamp(16em, 25%, 20em);
-    width: 18em;
-    overflow: hidden;
-    padding: 1em;
+  flex-basis: clamp(16em, 25%, 20em);
+  width: 18em;
+  overflow: hidden;
+  padding: 1em;
 }
 
 #userList img {
-    max-width: 25%;
+  max-width: 25%;
 }
 
 #userList {
-    display: flex;
-    flex-wrap: wrap;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.hide-content{
+    display: none;
 }
