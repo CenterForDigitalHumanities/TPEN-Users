@@ -96,12 +96,12 @@ router.get("/getAllUsers", async function (req, res, next) {
         )
         return Promise.all(fetchUsersInRoles)
           .then((userGroups) => {
-            const roleNames = ["public", "inactive"]
+            const roleNames = ["public", "inactive", "admin"]
             res.json(
               userGroups
                 .map((group, index) =>
                   group.map((user) => {
-                    user.role = roleNames[index]
+                    user.role = user.role.push(roleNames[index])
                     return user
                   })
                 )
