@@ -98,7 +98,8 @@ router.get("/getAllUsers", async function (req, res, next) {
         return Promise.all(fetchUsersInRoles)
           .then((userGroups) => {
             const roleNames = ["admin", "inactive", "public"] //the order of this must match the order of ROLES above
-            // res.json(userGroups)
+
+            // get users in groups according to roles, attach role tag to user object, merge roles of users that appear in multiple groups
 
             const mergedUserInfo = {}
 
@@ -176,7 +177,7 @@ router.post("/assignRole", async function (req, res, next) {
         .assignRolestoUser({ id: userid }, { roles: [roleID] })
         .then((result) => {
           // Super odd. On success, the response is an empty string...
-          // unassign from other Tpen roles
+          // unassign from other non-admin Tpen roles
           const dataObj = {
             roles: ROLES.filter(
               (justAdded) =>

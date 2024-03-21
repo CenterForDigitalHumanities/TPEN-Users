@@ -42,7 +42,9 @@ h1 {
 .role {
   text-transform: capitalize;
 }
-
+.select-role {
+  margin: 5px 0px;
+}
 .no-break {
   white-space: nowrap;
 }
@@ -65,6 +67,6 @@ h1 {
   flex-wrap: wrap;
 }
 
-.hide-content{
-    display: none;
+.hide-content {
+  display: none;
 }

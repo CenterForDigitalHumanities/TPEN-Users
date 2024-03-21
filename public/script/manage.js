@@ -71,7 +71,7 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
                 <span class="role badge" userid="${
                   user.user_id
                 }">${user?.roles?.join(", ")}</span>
-                <select name="${user.user_id}">
+                <select class="select-role" name="${user.user_id}">
                     ${ROLES.reduce((a, b) => {
                       return (a += `<option ${
                         user.roles.includes(b) ? "selected=true" : ""
