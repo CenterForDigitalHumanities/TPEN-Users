@@ -126,9 +126,9 @@ async function assignRole(userid, role) {
     cache: "default",
     headers: {
       Authorization: `Bearer ${window.TPEN_USER?.authorization}`,
-      "Content-Type": "application/json; charset=utf-8",
+      "Content-Type": "application/json; charset=utf-8"
     },
-    body: JSON.stringify({ role, userid }),
+    body: JSON.stringify({ role, userid })
   })
     .then((_resp) => {
       if (!_resp.ok) throw _resp
@@ -204,12 +204,12 @@ async function assignRole(userid, role) {
  * Use our Auth0 Server back end to ask for all the Dunbap Apps users.
  */
 async function getAllUsers() {
-  return await fetch("/tpen-users/manage/getAllUsers", {
+  return fetch("/tpen-users/manage/getAllUsers", {
     method: "GET",
     cache: "no-store",
     headers: {
-      Authorization: `Bearer ${window.TPEN_USER?.authorization}`,
-    },
+      Authorization: `Bearer ${window.TPEN_USER?.authorization}`
+    }
   })
     .then((resp) => {
       if (!resp.ok) throw resp

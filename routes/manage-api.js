@@ -8,7 +8,7 @@ const got = require("got")
 const ROLES = [
   process.env.ROLE_ADMIN_ID,
   process.env.ROLE_INACTIVE_ID,
-  process.env.ROLE_PUBLIC_ID,
+  process.env.ROLE_PUBLIC_ID
 ].map((str) => str.split(" ")[0])
 
 let manager = new ManagementClient({
@@ -16,11 +16,11 @@ let manager = new ManagementClient({
   clientId: process.env.CLIENTID,
   clientSecret: process.env.CLIENT_SECRET,
   scope:
-    "create:users read:users read:user_idp_tokens update:users delete:users read:roles create:roles update:roles delete:roles",
+    "create:users read:users read:user_idp_tokens update:users delete:users read:roles create:roles update:roles delete:roles"
 })
 let authenticator = new AuthenticationClient({
   domain: process.env.DOMAIN,
-  clientId: process.env.CLIENTID,
+  clientId: process.env.CLIENTID
 })
 
 // /**
@@ -182,7 +182,7 @@ router.post("/assignRole", async function (req, res, next) {
             roles: ROLES.filter(
               (justAdded) =>
                 justAdded !== roleID && justAdded !== process.env.ROLE_ADMIN_ID
-            ),
+            )
           }
 
           manager
