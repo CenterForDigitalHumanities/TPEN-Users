@@ -7,7 +7,9 @@
     "devstart": "node ./bin/tpen_users.js",
     "dev": "nodemon ./bin/tpen_users.js",
     "test": "jest",
-    "runtest": "node ./bin/testApp.js"
+    "allTests": "node node_modules/jest/bin/jest.js",
+    "E2Etests": "node node_modules/jest/bin/jest.js -t e2e",
+    "unitTests": "node node_modules/jest/bin/jest.js -t _unit"
   },
   "dependencies": {
     "auth0": "^3.2.0",
