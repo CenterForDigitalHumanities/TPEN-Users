@@ -1,0 +1,52 @@
+name: dev.users.t-pen.org deploy on push to development
+on:
+  push:
+    branches: development
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup Node.js
+        uses: actions/setup-node@master
+        with:
+          node-version: "21"
+      - name: Cache node modules
+        uses: actions/cache@master
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{
+            hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install dependencies and run the test
+        run: |
+          npm install
+          npm run allTests
+  deploy:
+    needs:
+      - test
+    strategy:
+      matrix:
+        machines:
+          - vlcdhp02
+    runs-on: ${{ matrix.machines }}
+    steps:
+      - uses: actions/checkout@master
+      - name: Deploy the app on the server
+        run: |
+          if [[ ! -e /srv/node/logs/tpen_users.txt ]]; then
+              mkdir -p /srv/node/logs
+              touch /srv/node/logs/tpen_users.txt
+          fi
+          cd /srv/node/tpen-users/
+          pm2 stop tpen_users
+          git stash
+          git checkout development
+          git pull
+          npm install
+          pm2 -s start -i max bin/tpen_users.mjs
