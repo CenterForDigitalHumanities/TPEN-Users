@@ -1,4 +1,4 @@
-name: api.t-pen.org deploy on push to main
+name: users.t-pen.org deploy on push to main
 on:
   push:
     branches: main

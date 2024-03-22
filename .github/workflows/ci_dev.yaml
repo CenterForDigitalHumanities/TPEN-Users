@@ -1,4 +1,4 @@
-name: TPEN3 Services end to end tests on PR to development
+name: TPEN Users end to end tests on PR to development
 on:
   pull_request:
     branches: development
