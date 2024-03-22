@@ -49,4 +49,4 @@ jobs:
           git checkout development
           git pull
           npm install
-          pm2 -s start -i max bin/tpen_users.mjs
+          pm2 -s start -i max bin/tpen_users.js
