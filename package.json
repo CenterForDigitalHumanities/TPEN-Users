@@ -1,10 +1,11 @@
 {
-  "name": "glossing_users",
+  "name": "tpen_users",
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/glossing_users.js",
-    "devstart": "node ./bin/glossing_users.js",
+    "start": "node ./bin/tpen_users.js",
+    "devstart": "node ./bin/tpen_users.js",
+    "dev": "nodemon ./bin/tpen_users.js",
     "test": "jest",
     "runtest": "node ./bin/testApp.js"
   },
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@jest-mock/express": "^1.4.5",
     "jest": "^27.5.1",
+    "nodemon": "^3.1.0",
     "supertest": "^6.2.2"
   }
 }

@@ -17,12 +17,12 @@ module.exports = {
   // clearMocks: false,
 
   //This will tell you why jest couldn't close.  Right now, it will flag the client.connect() b/c there is no client.close()
-  //That is OK in the testing scenario.  In production, only one connection is made and it is closed when the app exits. 
-  detectOpenHandles : false,
+  //That is OK in the testing scenario.  In production, only one connection is made and it is closed when the app exits.
+  detectOpenHandles: false,
 
   displayName: {
-    name: 'Glossing Users',
-    color: 'cyan',
+    name: "TPEN Users",
+    color: "cyan"
   },
 
   // Indicates whether the coverage information should be collected while executing the test
@@ -30,19 +30,15 @@ module.exports = {
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: [
-      //"**/*.js",
-      "**/routes/*.js"
+    //"**/*.js",
+    "**/routes/*.js"
   ],
 
   // Indicates which provider should be used to instrument code for coverage
   coverageProvider: "v8",
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: [
-    "json",
-    "text",
-    "html"
-  ],
+  coverageReporters: ["json", "text", "html"],
 
   // Indicates whether each individual test should be reported during the run
   verbose: true,
@@ -201,7 +197,7 @@ module.exports = {
   // unmockedModulePathPatterns: undefined,
 
   // An array of regexp patterns that are matched against all source file paths before re-running tests in watch mode
-  watchPathIgnorePatterns: ['globalConfig'],
+  watchPathIgnorePatterns: ["globalConfig"]
 
   // Whether to use watchman for file crawling
   // watchman: true,
