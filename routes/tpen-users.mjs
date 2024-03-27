@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-const express = require("express")
-const path = require("path")
+import express from "express"
+import path from "path"
 const router = express.Router()
-const managementRouter = require("./manage-api.js")
+import managementRouter from "./manage-api.mjs"
+import { __dirname } from "../utilities/getDirectoryName.mjs"
+ 
 // public also available at `/tpen-users` now
 router.use(express.static(path.join(__dirname, "../public")))
 
@@ -15,4 +17,4 @@ router.get("/", function (req, res, next) {
   res.redirect(301, "profile.html")
 })
 
-module.exports = router
+export default router

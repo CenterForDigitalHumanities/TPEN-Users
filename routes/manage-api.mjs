@@ -1,15 +1,24 @@
 #!/usr/bin/env node
+import dotenv from "dotenv"
+dotenv.config()
+import auth0 from "auth0"
+const ManagementClient = auth0.ManagementClient
+const AuthenticationClient = auth0.AuthenticationClient
 
-const ManagementClient = require("auth0").ManagementClient
-const AuthenticationClient = require("auth0").AuthenticationClient
-const express = require("express")
+import express from "express"
 const router = express.Router()
-const got = require("got")
+
+// const ROLES = [
+//   process.env.ROLE_ADMIN_ID,
+//   process.env.ROLE_INACTIVE_ID,
+//   process.env.ROLE_PUBLIC_ID
+// ].map((str) => str.split(" ")[0])
+
 const ROLES = [
   process.env.ROLE_ADMIN_ID,
   process.env.ROLE_INACTIVE_ID,
   process.env.ROLE_PUBLIC_ID
-].map((str) => str.split(" ")[0])
+]
 
 let manager = new ManagementClient({
   domain: process.env.DOMAIN,
@@ -92,7 +101,7 @@ router.get("/getAllUsers", async function (req, res, next) {
         }
 
         const fetchUsersInRoles = ROLES.map((id) =>
-          manager.getUsersInRole({ id })
+          manager.getUsersInRole({id})
         )
 
         return Promise.all(fetchUsersInRoles)
@@ -111,7 +120,7 @@ router.get("/getAllUsers", async function (req, res, next) {
                     user.roles.push(roleNames[i])
                   }
 
-                  const { email, roles, ...otherProps } = user
+                  const {email, roles, ...otherProps} = user
 
                   if (mergedUserInfo[email]) {
                     mergedUserInfo[email].roles.push(
@@ -120,7 +129,7 @@ router.get("/getAllUsers", async function (req, res, next) {
                       )
                     )
                   } else {
-                    mergedUserInfo[email] = { email, roles, ...otherProps }
+                    mergedUserInfo[email] = {email, roles, ...otherProps}
                   }
                 })
               })
@@ -152,7 +161,7 @@ router.get("/getAllUsers", async function (req, res, next) {
  */
 router.post("/assignRole", async function (req, res, next) {
   const token = (req.header("Authorization") ?? "")?.replace("Bearer ", "")
-  const { userid, role } = req.body
+  const {userid, role} = req.body
   const roleID = process.env[`ROLE_${String(role).toUpperCase()}_ID`]
 
   // Guards
@@ -174,7 +183,7 @@ router.post("/assignRole", async function (req, res, next) {
       }
 
       manager
-        .assignRolestoUser({ id: userid }, { roles: [roleID] })
+        .assignRolestoUser({id: userid}, {roles: [roleID]})
         .then((result) => {
           // Super odd. On success, the response is an empty string...
           // unassign from other non-admin Tpen roles
@@ -186,7 +195,7 @@ router.post("/assignRole", async function (req, res, next) {
           }
 
           manager
-            .removeRolesFromUser({ id: userid }, dataObj)
+            .removeRolesFromUser({id: userid}, dataObj)
             .then((resp2) => {
               res
                 .status(200)
@@ -230,9 +239,9 @@ function getURLHash(variable, url) {
  *  Given a user profile, check if that user is a Tpen Apps admin.
  */
 function isAdmin(user) {
-  let roles = { roles: [] }
+  let roles = {roles: []}
   if (user[process.env.TPEN3_ROLES_CLAIM]) {
-    roles = user[process.env.TPEN3_ROLES_CLAIM].roles ?? { roles: [] }
+    roles = user[process.env.TPEN3_ROLES_CLAIM].roles ?? {roles: []}
   }
   return roles.includes("tpen_user_admin")
 }
@@ -247,4 +256,4 @@ function isTpenUser(user) {
   )
 }
 
-module.exports = router
+export default router
