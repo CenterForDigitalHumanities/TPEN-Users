@@ -4,8 +4,14 @@ import express from "express"
 import path from "path"
 const router = express.Router()
 import managementRouter from "./manage-api.mjs"
-import { __dirname } from "../utilities/getDirectoryName.mjs"
- 
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
 // public also available at `/tpen-users` now
 router.use(express.static(path.join(__dirname, "../public")))
 

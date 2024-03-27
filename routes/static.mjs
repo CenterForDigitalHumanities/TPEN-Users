@@ -9,7 +9,11 @@
 import express from "express"
 const router = express.Router()
 import path from "path"
-import { __dirname } from "../utilities/getDirectoryName.mjs"
+ import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
  
 
 // public also available at `/tpen-users`

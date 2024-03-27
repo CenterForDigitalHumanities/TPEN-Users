@@ -11,11 +11,14 @@ dotenvExpand.expand(storedEnv)
 import logger from "morgan"
 import cors from "cors"
 
+import {fileURLToPath} from "url"
+import {dirname} from "path"
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 import indexRouter from "./routes/index.mjs"
-import { __dirname } from "./utilities/getDirectoryName.mjs"
-
+ 
 var app = express()
 
 // view engine setup
