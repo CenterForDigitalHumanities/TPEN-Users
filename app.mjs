@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 import indexRouter from "./routes/index.mjs"
- 
+
 var app = express()
 
 // view engine setup
@@ -72,8 +72,7 @@ app.use("/", indexRouter)
 //catch 404 because of an invalid site path
 app.use(function (req, res, next) {
   let msg = res.statusMessage ?? "This page does not exist"
-  res.status(404).send(msg)
-  res.end()
+  res.status(404).json({error: msg})
 })
 
 export default app

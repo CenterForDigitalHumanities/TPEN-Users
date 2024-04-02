@@ -12,7 +12,7 @@
 
 import "https://cdn.auth0.com/js/auth0/9.19.0/auth0.min.js"
 
-const AUDIENCE = "https://cubap.auth0.com/api/v2/"
+const AUDIENCE = "http://rerum.io"
 const ISSUER_BASE_URL = "cubap.auth0.com"
 const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
