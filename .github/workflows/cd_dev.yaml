@@ -46,6 +46,7 @@ jobs:
           cd /srv/node/tpen-users/
           pm2 stop tpen_users
           git stash
+          git pull
           git checkout 04-03-ci-cd-checkup
           git pull
           npm install
