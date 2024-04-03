@@ -1,7 +1,7 @@
-name: TPEN Users end to end tests on PR to 04-03-ci-cd-checkup
+name: TPEN Users end to end tests on PR to development
 on:
   pull_request:
-    branches: 04-03-ci-cd-checkup
+    branches: development
 jobs:
   test:
     runs-on: ubuntu-latest
