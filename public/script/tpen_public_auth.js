@@ -12,18 +12,20 @@
 
 import "https://cdn.auth0.com/js/auth0/9.19.0/auth0.min.js"
 
-const AUDIENCE = "http://rerum.io"
+const AUDIENCE = "https://cubap.auth0.com/api/v2/"
 const ISSUER_BASE_URL = "cubap.auth0.com"
 const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
+
+const returnTo = "https://three.t-pen.org/callback"
 
 const webAuth = new auth0.WebAuth({
   domain: DOMAIN,
   clientID: CLIENT_ID,
   audience: AUDIENCE,
   scope:
-    "read:roles update:current_user_metadata name nickname picture email profile openid offline_access",
-  redirectUri: origin,
+    "read:roles update:current_user_metadata name nickname picture email profile openid offline_access", 
+  redirectUri: returnTo,
   responseType: "id_token token",
   state: urlToBase64(location.href),
 })
@@ -34,7 +36,7 @@ const logout = () => {
   document
     .querySelectorAll('[is="auth-creator"]')
     .forEach((el) => el.connectedCallback())
-  webAuth.logout({ returnTo: origin })
+  webAuth.logout({ returnTo: returnTo })
 }
 const login = (custom) =>
   webAuth.authorize(Object.assign({ authParamsMap: { app: "tpen" } }, custom))
