@@ -17,7 +17,7 @@ const ISSUER_BASE_URL = "cubap.auth0.com"
 const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
 
-const returnTo = "https://three.t-pen.org/callback"
+const returnTo = process.env.CALLBACK_URL
 
 const webAuth = new auth0.WebAuth({
   domain: DOMAIN,
