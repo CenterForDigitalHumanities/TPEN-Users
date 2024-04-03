@@ -9,7 +9,7 @@
     "test": "jest",
     "allTests": "node node_modules/jest/bin/jest.js",
     "E2Etests": "node node_modules/jest/bin/jest.js -t e2e",
-    "unitTests": "node node_modules/jest/bin/jest.mjs -t _unit"
+    "unitTests": "node node_modules/jest/bin/jest.js -t _unit"
   },
   "dependencies": {
     "auth0": "^3.2.0",
