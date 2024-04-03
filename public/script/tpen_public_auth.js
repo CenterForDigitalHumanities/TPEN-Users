@@ -25,8 +25,7 @@ const webAuth = new auth0.WebAuth({
   audience: AUDIENCE,
   scope:
     "read:roles update:current_user_metadata name nickname picture email profile openid offline_access", 
-  redirectUri: returnTo,  
-  redirectUri: returnTo,
+  redirectUri: returnTo,   
   responseType: "id_token token",
   state: urlToBase64(location.href),
 })
@@ -37,8 +36,7 @@ const logout = () => {
   document
     .querySelectorAll('[is="auth-creator"]')
     .forEach((el) => el.connectedCallback())
-  webAuth.logout({ returnTo: returnTo })
-  webAuth.logout({ returnTo: returnTo })
+  webAuth.logout({ returnTo }) 
 }
 const login = (custom) =>
   webAuth.authorize(Object.assign({ authParamsMap: { app: "tpen" } }, custom))
