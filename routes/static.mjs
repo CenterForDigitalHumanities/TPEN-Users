@@ -6,9 +6,15 @@
  *
  * @author cubap
  */
-const express = require("express")
+import express from "express"
 const router = express.Router()
-const path = require("path")
+import path from "path"
+ import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+ 
 
 // public also available at `/tpen-users`
 router.use(express.static(path.join(__dirname, "../public")))
@@ -19,4 +25,4 @@ router.get("/", function (req, res) {
 })
 
 // Export API routes
-module.exports = router
+export default router

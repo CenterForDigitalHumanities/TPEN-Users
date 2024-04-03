@@ -1,0 +1,24 @@
+name: TPEN Users Deploy
+on:
+  push:
+    branches: TODO
+jobs:
+  deploy:
+    strategy:
+      matrix:
+        node-version: [21]
+        machines: [vlcdhprdp01]
+    runs-on: ${{ matrix.machines }}
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          if [[ ! -e /srv/node/logs/tpen_users.txt ]]; then
+              mkdir -p /srv/node/logs
+              touch /srv/node/logs/tpen_users.txt
+          fi
+          cd /srv/node/tpen-users/
+          pm2 stop tpen_users
+          git stash
+          git pull
+          npm install
+          pm2 start -i max bin/tpen_users.mjs

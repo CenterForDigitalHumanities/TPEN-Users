@@ -3,13 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/tpen_users.js",
-    "devstart": "node ./bin/tpen_users.js",
-    "dev": "nodemon ./bin/tpen_users.js",
+    "start": "node ./bin/tpen_users.mjs",
+    "devstart": "node ./bin/tpen_users.mjs",
+    "dev": "nodemon ./bin/tpen_users.mjs",
     "test": "jest",
     "allTests": "node node_modules/jest/bin/jest.js",
     "E2Etests": "node node_modules/jest/bin/jest.js -t e2e",
-    "unitTests": "node node_modules/jest/bin/jest.js -t _unit"
+    "unitTests": "node node_modules/jest/bin/jest.mjs -t _unit"
   },
   "dependencies": {
     "auth0": "^3.2.0",
@@ -21,7 +21,6 @@
     "ejs": "^3.1.6",
     "express": "^4.16.4",
     "express-oauth2-jwt-bearer": "^1.1.0",
-    "got": "^11.8.3",
     "http-errors": "~1.6.3",
     "jest-cli": "^27.5.1",
     "jwt-decode": "^3.1.2",
