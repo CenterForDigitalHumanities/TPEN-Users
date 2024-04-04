@@ -1,10 +1,10 @@
-const got = require('got')
-// const jwt = require('express-jwt')
+// import jwt from 'express-jwt'
 // Currently unsed, but we should consider setting scopes moving forward and this will be handy then.
-// const jwtAuthz = require('express-jwt-authz')
-const { auth } = require('express-oauth2-jwt-bearer')
+//import jwtAuthz from 'express-jwt-authz'
 
-const dotenv = require('dotenv')
+import { auth } from 'express-oauth2-jwt-bearer'
+
+import dotenv from 'dotenv'
 dotenv.config()
 
 const _tokenError = function (err, req, res, next) {

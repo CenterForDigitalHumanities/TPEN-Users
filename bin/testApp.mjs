@@ -1,18 +1,23 @@
 #!/usr/bin/env node
 
 /**
+ * @author thehabes
+ * */
+
+/**
  * Module dependencies.
  */
-
-var app = require("../app")
-var debug = require("debug")("tpen_users:server")
-var http = require("http")
+import jest from "jest"
+import runCLI from "jest-cli"
+import app from "../app.mjs"
+//import defaults from '../jest.config.js'
+import http from"http"
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || "3000")
+var port = normalizePort("3333")
 app.set("port", port)
 
 /**
@@ -87,9 +92,24 @@ function onError(error) {
  * Event listener for HTTP server "listening" event.
  */
 
-function onListening() {
+async function onListening() {
   console.log("LISTENING ON " + port)
-  var addr = server.address()
-  var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port
-  debug("Listening on " + bind)
+  //Ideally, create and then blow this away.
+  process.env.MONGODBNAME = "annotationStoreTesting"
+  jest
+    .runCLI(
+      {
+        colors: "true"
+      },
+      ["jest.config.js"]
+    )
+    .then(({results}) => {
+      if (results.success) {
+        console.log("Tests completed")
+        process.exit(0)
+      } else {
+        console.error("Tests failed")
+        process.exit(1)
+      }
+    })
 }
