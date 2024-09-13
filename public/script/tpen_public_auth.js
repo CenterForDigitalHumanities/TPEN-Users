@@ -18,6 +18,25 @@ const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
 const TPEN_CALLBACK = "https://three.t-pen.org/callback"
 
+/**
+const lock = new Auth0Lock(CLIENT_ID, DOMAIN, options)
+lock.on("authenticated", function(authResult) {
+  // Use the token in authResult to getUserInfo() and save it if necessary
+  lock.getUserInfo(authResult.accessToken, function(error, profile) {
+    if (error) {
+      // Handle error
+      return
+    }
+
+    //save Access Token only if necessary
+    privateStore.accessToken = accessToken
+    privateStore.profile = profile
+
+    // Update DOM
+  })
+})
+*/
+
 const webAuth = new auth0.WebAuth({
   domain: DOMAIN,
   clientID: CLIENT_ID,
