@@ -16,7 +16,7 @@ const AUDIENCE = "https://cubap.auth0.com/api/v2/"
 const ISSUER_BASE_URL = "cubap.auth0.com"
 const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
-const TPEN_CALLBACK = "https://three.t-pen.org/callback"
+const TPEN_CALLBACK = "http://localhost:3012/callback"
 
 /**
 const lock = new Auth0Lock(CLIENT_ID, DOMAIN, options)
@@ -81,7 +81,12 @@ class AuthButton extends HTMLButtonElement {
         if (this.getAttribute("disabled") !== null) {
           return
         }
-        login()
+        if(err.code === "origin_mismatch"){
+          console.error("ORIGIN MISMATCH.  Can we do anything")
+        }
+        else{
+          login()
+        }
       }
       const ref = getReferringPage()
       if (ref && ref !== location.href) {
