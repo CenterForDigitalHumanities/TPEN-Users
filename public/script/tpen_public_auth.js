@@ -10,14 +10,41 @@
  * - This can be made more generic by passing in the constants and parameterizing {app:'tpen'}.
  */
 
-import "https://cdn.auth0.com/js/auth0/9.19.0/auth0.min.js"
-
-const AUDIENCE = "https://cubap.auth0.com/api/v2/"
-const ISSUER_BASE_URL = "cubap.auth0.com"
-const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
-const DOMAIN = "cubap.auth0.com"
+import "./jwt.js"
 
 const returnTo = origin
+
+function authenticateInterfaces(returnTo) {
+  const incomingToken = new URLSearchParams(window.location.search).get("idToken")
+  const authenticatedElements = document.querySelectorAll('[requires-auth]')
+  if(authenticatedElements.length === 0) {
+    return
+  }
+
+  const userToken = incomingToken ?? localStorage.getItem("TPEN_USER").authentication
+  
+  // Redirect to login if no userToken
+  if(!userToken) {
+    location.href = `https://three.t-pen.org/login?returnTo=${returnTo ?? location.href}`
+  }
+  
+  // Override the userToken if it is in the query string
+  const TPEN_USER = !incomingToken ? localStorage.getItem("TPEN_USER") 
+    : ()=> {
+      const userData = jwtDecode(userToken)
+      const user = {}
+      user.authentication = userToken
+      user.id = userData["http://store.rerum.io/agent"]?.split("/").pop()
+      user.expires = userData.exp
+      return user
+    }
+  authenticatedElements.forEach(el => {
+    el.setAttribute("tpen-user", TPEN_USER.id)
+    el.setAttribute("tpen-token-expires", TPEN_USER.expires)
+    el.tpenAuthToken = userToken
+  })
+  localStorage.setItem("TPEN_USER", TPEN_USER)
+}
 
 const webAuth = new auth0.WebAuth({
   domain: DOMAIN,
@@ -49,6 +76,62 @@ const getReferringPage = () => {
   }
 }
 
+class TpenAuth extends HTMLElement {
+  static get observedAttributes() {
+    return ["tpen-user", "tpen-token-expires"]
+  }
+
+  constructor() {
+    super()
+    this.login = login
+    this.logout = logout
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === "tpen-user") {
+      this.dispatchEvent(
+        new CustomEvent("user-login", {
+          detail: { user: newValue },
+        })
+      )
+    }
+    if (name === "tpen-token-expires") {
+      this.expiring = setTimeout(() => {        
+      this.dispatchEvent(
+        new CustomEvent("token-expiration", {
+          detail: { expires: newValue },
+        })
+      )
+    }, newValue - Date.now())
+  }
+
+  connectedCallback() {
+    const returnTo = this.getAttribute("returnTo")
+    if (window.authenticating) {
+      window.authenticating.then(() => {
+        authenticateInterfaces(returnTo)
+        delete window.authenticating
+      })
+    } else {
+      window.authenticating = new Promise((resolve) => {
+        authenticateInterfaces(returnTo)
+        resolve()
+      }).then(() => {
+        delete window.authenticating
+      })
+    }
+
+    this.addEventListener("user-login", () => {
+      this.connectedCallback()
+    })
+
+    this.addEventListener("token-expiration", () => {
+      this.addClass("authentication-expired")
+  }    
+}
+
+customElements.define("tpen-auth", TpenAuth)
+
 class AuthButton extends HTMLButtonElement {
   constructor() {
     super()
@@ -58,30 +141,20 @@ class AuthButton extends HTMLButtonElement {
   }
 
   connectedCallback() {
-    webAuth.checkSession({}, (err, result) => {
-      if (err) {
-        if (this.getAttribute("disabled") !== null) {
-          return
-        }
-        login()
-      }
-      const ref = getReferringPage()
-      if (ref && ref !== location.href) {
-        location.href = ref
-      }
-      localStorage.setItem("userToken", result.idToken)
-      window.TPEN_USER = result.idTokenPayload
-      window.TPEN_USER.authorization = result.accessToken
-      document
-        .querySelectorAll('[is="auth-creator"]')
-        .forEach((el) => el.connectedCallback())
-      this.innerText = `Logout ${TPEN_USER.nickname}`
-      this.removeAttribute("disabled")
-      const loginEvent = new CustomEvent("tpen-authenticated", {
-        detail: window.TPEN_USER,
+    const returnTo = this.getAttribute("returnTo")
+    if (window.authenticating) {
+      window.authenticating.then(() => {
+        authenticateInterfaces(returnTo)
+        delete window.authenticating
       })
-      this.dispatchEvent(loginEvent)
-    })
+    } else {
+      window.authenticating = new Promise((resolve) => {
+        authenticateInterfaces(returnTo)
+        resolve()
+      }).then(() => {
+        delete window.authenticating
+      })
+    }
   }
 }
 

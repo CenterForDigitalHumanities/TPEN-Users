@@ -24,7 +24,8 @@
     "http-errors": "~1.6.3",
     "jest-cli": "^27.5.1",
     "jwt-decode": "^3.1.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "tpen_users": "file:"
   },
   "devDependencies": {
     "@jest-mock/express": "^1.4.5",
