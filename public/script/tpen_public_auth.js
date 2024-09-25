@@ -28,7 +28,22 @@ function authenticateInterfaces(returnTo) {
   // Override the userToken if it is in the query string
   const TPEN_USER = !incomingToken ? localStorage.getItem("TPEN_USER") 
     : ()=> {
-      const userData = jwtDecode(userToken)
+      let userData
+      try {
+        userData = jwtDecode(userToken)
+      } catch (e) {
+        localStorage.removeItem("TPEN_USER")
+        delete window.TPEN_USER
+        document
+          .querySelectorAll('[requires-auth]')
+          .forEach((el) => {
+            el.setAttribute("tpen-user", "")
+            el.setAttribute("tpen-token-expires", "")
+            delete el.tpenAuthToken
+          })
+        console.error(e)
+        return
+      }
       const user = {}
       user.authentication = userToken
       user.id = userData["http://store.rerum.io/agent"]?.split("/").pop()
