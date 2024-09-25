@@ -1,5 +1,6 @@
 {
   "name": "tpen_users",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -23,6 +24,7 @@
     "express-oauth2-jwt-bearer": "^1.6.0",
     "http-errors": "~2.0.0",
     "jest-cli": "^29.7.0",
+    "jsdom": "^25.0.1",
     "jwt-decode": "^4.0.0",
     "morgan": "^1.10.0",
     "tpen_users": "file:"
