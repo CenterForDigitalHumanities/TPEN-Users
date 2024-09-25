@@ -13,19 +13,18 @@ const webAuth = new auth0.WebAuth({
 let login_beat = null
 function startHeartbeat() {
   login_beat = setInterval(async function () {
-    if (localStorage.getItem("Tpen-Login-Token")) {
-      webAuth.checkSession({}, (err, result) => {
-        if (err) {
-          login()
-          stopHeartbeat()
-        } else {
-          localStorage.setItem("Tpen-Login-Token", result.accessToken)
-        }
-      })
-    } else {
+    const token = localStorage.getItem("Tpen-Login-Token")
+    if (!token) {
       login()
-      //You need to login to start a session!
+      return
     }
+    webAuth.checkSession({}, (err, result) => {
+      if (err) {
+        login()
+        return
+      }
+      localStorage.setItem("Tpen-Login-Token", result.accessToken)
+    })
   }, 60000 * 4.5) // These tokens expire every 5 Mins
 }
 

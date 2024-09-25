@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 import dotenv from "dotenv"
 dotenv.config()
-import auth0 from "auth0"
-const ManagementClient = auth0.ManagementClient
-const AuthenticationClient = auth0.AuthenticationClient
+import {ManagementClient, AuthenticationClient} from "auth0"
 
 import express from "express"
 const router = express.Router()

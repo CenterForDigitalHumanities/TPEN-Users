@@ -96,13 +96,14 @@ class TpenAuth extends HTMLElement {
       )
     }
     if (name === "tpen-token-expires") {
-      this.expiring = setTimeout(() => {        
-      this.dispatchEvent(
-        new CustomEvent("token-expiration", {
-          detail: { expires: newValue },
-        })
-      )
-    }, newValue - Date.now())
+        this.expiring = setTimeout(() => {        
+        this.dispatchEvent(
+          new CustomEvent("token-expiration", {
+            detail: { expires: newValue },
+          })
+        )
+      }, newValue - Date.now())
+    }
   }
 
   connectedCallback() {
@@ -127,7 +128,8 @@ class TpenAuth extends HTMLElement {
 
     this.addEventListener("token-expiration", () => {
       this.addClass("authentication-expired")
-  }    
+    })
+  }
 }
 
 customElements.define("tpen-auth", TpenAuth)
