@@ -53,11 +53,11 @@ function logout(redirect=location.href) {
       el.setAttribute("tpen-token-expires", "")
       delete el.tpenAuthToken
     })
-  location.href = `https://three.t-pen.org/logout?returnTo=${redirect}`
+  location.href = `https://three.t-pen.org/logout?returnTo=${encodeURIComponent(redirect)}`
 }
 
 function login(redirect=location.href) {
-  location.href = `https://three.t-pen.org/login?returnTo=${redirect}`
+  location.href = `https://three.t-pen.org/login?returnTo=${encodeURIComponent(redirect)}`
 }
 
 class TpenAuth extends HTMLElement {
