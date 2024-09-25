@@ -2,8 +2,7 @@
  * @module AuthButton Adds custom element for login/logout of Auth0, based on configuration below.
  * @author cubap
  *
- * @description This module includes a custom `<button is="auth-button">` element for authentication within
- * the Dunbar Public Library and Archive Project.
+ * @description This module includes a custom `<button is="auth-button">` element for authentication
  * Notes:
  * - Include this module and a button[is='auth-button'] element to use.
  * - Add the `disabled` property on any page that should be available to the public, but knowing the user may be helpful.
@@ -46,35 +45,20 @@ function authenticateInterfaces(returnTo) {
   localStorage.setItem("TPEN_USER", TPEN_USER)
 }
 
-const webAuth = new auth0.WebAuth({
-  domain: DOMAIN,
-  clientID: CLIENT_ID,
-  audience: AUDIENCE,
-  scope:
-    "read:roles update:current_user_metadata name nickname picture email profile openid offline_access", 
-  redirectUri: returnTo,   
-  responseType: "id_token token",
-  state: urlToBase64(location.href),
-})
-
 const logout = () => {
-  localStorage.removeItem("userToken")
+  localStorage.removeItem("TPEN_USER")
   delete window.TPEN_USER
   document
-    .querySelectorAll('[is="auth-creator"]')
-    .forEach((el) => el.connectedCallback())
-  webAuth.logout({ returnTo }) 
+    .querySelectorAll('[requires-auth]')
+    .forEach((el) => {
+      el.setAttribute("tpen-user", "")
+      el.setAttribute("tpen-token-expires", "")
+      delete el.tpenAuthToken
+    })
+  location.href = `https://three.t-pen.org/logout?returnTo=${origin}`
 }
-const login = (custom) =>
-  webAuth.authorize(Object.assign({ authParamsMap: { app: "tpen" } }, custom))
 
-const getReferringPage = () => {
-  try {
-    return b64toUrl(location.hash.split("state=")[1].split("&")[0])
-  } catch (err) {
-    return false
-  }
-}
+const login = (redirect) => location.href = `https://three.t-pen.org/login?returnTo=${redirect ?? location.href}`
 
 class TpenAuth extends HTMLElement {
   static get observedAttributes() {
@@ -134,68 +118,4 @@ class TpenAuth extends HTMLElement {
 
 customElements.define("tpen-auth", TpenAuth)
 
-class AuthButton extends HTMLButtonElement {
-  constructor() {
-    super()
-    this.onclick = logout
-    this.login = login
-    this.logout = logout
-  }
-
-  connectedCallback() {
-    const returnTo = this.getAttribute("returnTo")
-    if (window.authenticating) {
-      window.authenticating.then(() => {
-        authenticateInterfaces(returnTo)
-        delete window.authenticating
-      })
-    } else {
-      window.authenticating = new Promise((resolve) => {
-        authenticateInterfaces(returnTo)
-        resolve()
-      }).then(() => {
-        delete window.authenticating
-      })
-    }
-  }
-}
-
-customElements.define("auth-button", AuthButton, { extends: "button" })
-
-class AuthCreator extends HTMLInputElement {
-  constructor() {
-    super()
-  }
-
-  connectedCallback() {
-    if (!window.TPEN_USER) {
-      return
-    }
-    this.value = TPEN_USER["http://store.rerum.io/agent"] ?? "anonymous"
-  }
-}
-
-customElements.define("auth-creator", AuthCreator, { extends: "input" })
-
-/**
- * Follows the 'base64url' rules to decode a string.
- * @param {String} base64str from `state` parameter in the hash from Auth0
- * @returns referring URL
- */
-function b64toUrl(base64str) {
-  return window.atob(base64str.replace(/\-/g, "+").replace(/_/g, "/"))
-}
-/**
- * Follows the 'base64url' rules to encode a string.
- * @param {String} url from `window.location.href`
- * @returns encoded string to pass as `state` to Auth0
- */
-function urlToBase64(url) {
-  return window
-    .btoa(url)
-    .replace(/\//g, "_")
-    .replace(/\+/g, "-")
-    .replace(/=+$/, "")
-}
-
-export default { AuthButton, AuthCreator }
+export default TpenAuth
