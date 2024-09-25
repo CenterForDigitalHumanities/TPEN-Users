@@ -11,8 +11,6 @@
 
 import "./jwt.js"
 
-const returnTo = origin
-
 function authenticateInterfaces(returnTo) {
   const incomingToken = new URLSearchParams(window.location.search).get("idToken")
   const authenticatedElements = document.querySelectorAll('[requires-auth]')
@@ -24,7 +22,7 @@ function authenticateInterfaces(returnTo) {
   
   // Redirect to login if no userToken
   if(!userToken) {
-    location.href = `https://three.t-pen.org/login?returnTo=${returnTo ?? location.href}`
+    login(location.href ?? origin)
   }
   
   // Override the userToken if it is in the query string
@@ -45,7 +43,7 @@ function authenticateInterfaces(returnTo) {
   localStorage.setItem("TPEN_USER", TPEN_USER)
 }
 
-const logout = () => {
+function logout(redirect=location.href) {
   localStorage.removeItem("TPEN_USER")
   delete window.TPEN_USER
   document
@@ -55,10 +53,12 @@ const logout = () => {
       el.setAttribute("tpen-token-expires", "")
       delete el.tpenAuthToken
     })
-  location.href = `https://three.t-pen.org/logout?returnTo=${origin}`
+  location.href = `https://three.t-pen.org/logout?returnTo=${redirect}`
 }
 
-const login = (redirect) => location.href = `https://three.t-pen.org/login?returnTo=${redirect ?? location.href}`
+function login(redirect=location.href) {
+  location.href = `https://three.t-pen.org/login?returnTo=${redirect}`
+}
 
 class TpenAuth extends HTMLElement {
   static get observedAttributes() {
