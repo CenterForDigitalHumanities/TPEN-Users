@@ -16,6 +16,8 @@ const AUDIENCE = "https://cubap.auth0.com/api/v2/"
 const ISSUER_BASE_URL = "cubap.auth0.com"
 const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
+// const PROFILE_SERVICE = "https://dev.api.t-pen.org/my/profile/"
+const PROFILE_SERVICE = "https://localhost:3009/my/profile/"
 
 const returnTo = origin
 
@@ -24,9 +26,9 @@ const webAuth = new auth0.WebAuth({
   clientID: CLIENT_ID,
   audience: AUDIENCE,
   scope:
-    "read:roles update:current_user_metadata name nickname picture email profile openid offline_access", 
+    "read:roles read:current_user_metadata openid offline_access", 
   redirectUri: returnTo,   
-  responseType: "id_token token",
+  responseType: "id_token",
   state: urlToBase64(location.href),
 })
 
@@ -35,7 +37,7 @@ const logout = () => {
   delete window.TPEN_USER
   document
     .querySelectorAll('[is="auth-creator"]')
-    .forEach((el) => el.connectedCallback())
+    ?.forEach((el) => el.connectedCallback())
   webAuth.logout({ returnTo }) 
 }
 const login = (custom) =>
@@ -70,18 +72,43 @@ class AuthButton extends HTMLButtonElement {
         location.href = ref
       }
       localStorage.setItem("userToken", result.idToken)
-      window.TPEN_USER = result.idTokenPayload
-      window.TPEN_USER.authorization = result.accessToken
+      const USER = userFromPayload(result.idTokenPayload)
+      // strictly, this is authentication, but the name matches the expected header
+      USER.authorization = result.idToken 
       document
         .querySelectorAll('[is="auth-creator"]')
-        .forEach((el) => el.connectedCallback())
-      this.innerText = `Logout ${TPEN_USER.nickname}`
-      this.removeAttribute("disabled")
-      const loginEvent = new CustomEvent("tpen-authenticated", {
-        detail: window.TPEN_USER,
+        ?.forEach((el) => el.connectedCallback())
+      fetch(PROFILE_SERVICE, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${result.idToken}`,
+        },
       })
-      this.dispatchEvent(loginEvent)
+        .then((res) => res.json())
+        .then((profile) => {
+          delete profile._id
+          delete profile.type
+          window.TPEN_USER = Object.assign(USER, profile)
+          this.innerText = `Logout ${window.TPEN_USER.profile.displayName}`
+          this.removeAttribute("disabled")
+          const loginEvent = new CustomEvent("tpen-authenticated", {
+            detail: window.TPEN_USER,
+          })
+          this.dispatchEvent(loginEvent)
+        })
     })
+  }
+}
+
+function userFromPayload(payload) {
+  return {
+    id: payload["http://store.rerum.io/agent"]?.split("/").pop(),
+    isApproved: payload["http://rerum.io/app_flag"].includes("tpen"),
+    roles: payload["http://rerum.io/user_roles"]?.roles?.filter(r=>r.startsWith("tpen")),
+    subject: payload.sub,
+    issued: payload.iat,
+    expires: payload.exp,
+    agent: payload["http://store.rerum.io/agent"],
   }
 }
 
