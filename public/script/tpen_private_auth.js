@@ -89,7 +89,7 @@ class AuthButton extends HTMLButtonElement {
       })
         .then((res) => res.json())
         .then((profile) => {
-          delete profile._id
+          delete profile['@type']
           delete profile.type
           window.TPEN_USER = Object.assign(USER, profile)
           this.innerText = `Logout ${window.TPEN_USER.profile.displayName}`
@@ -105,7 +105,7 @@ class AuthButton extends HTMLButtonElement {
 
 function userFromPayload(payload) {
   return {
-    id: payload[CLAIMS.AGENT]?.split("/").pop(),
+    _id: payload[CLAIMS.AGENT]?.split("/").pop(),
     isApproved: payload[CLAIMS.APP].includes("tpen"),
     roles: payload[CLAIMS.ROLES]?.roles?.filter(r=>r.startsWith("tpen")),
     subject: payload.sub,
