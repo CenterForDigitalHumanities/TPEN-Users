@@ -12,19 +12,21 @@
 
 import "https://cdn.auth0.com/js/auth0/9.19.0/auth0.min.js"
 
-const AUDIENCE = "https://cubap.auth0.com/api/v2/"
-const ISSUER_BASE_URL = "cubap.auth0.com"
 const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
 // const PROFILE_SERVICE = "https://dev.api.t-pen.org/my/profile/"
-const PROFILE_SERVICE = "https://localhost:3009/my/profile/"
+const PROFILE_SERVICE = "https://api.t-pen.org/my/profile/"
+const CLAIMS = {
+  AGENT : "http://store.rerum.io/agent",
+  APP : "http://rerum.io/app_flag",
+  ROLES : "http://rerum.io/user_roles",
+}
 
 const returnTo = origin
 
 const webAuth = new auth0.WebAuth({
   domain: DOMAIN,
   clientID: CLIENT_ID,
-  audience: AUDIENCE,
   scope:
     "read:roles read:current_user_metadata openid offline_access", 
   redirectUri: returnTo,   
@@ -80,6 +82,7 @@ class AuthButton extends HTMLButtonElement {
         ?.forEach((el) => el.connectedCallback())
       fetch(PROFILE_SERVICE, {
         method: "GET",
+        cors: "cors",
         headers: {
           Authorization: `Bearer ${result.idToken}`,
         },
@@ -102,13 +105,13 @@ class AuthButton extends HTMLButtonElement {
 
 function userFromPayload(payload) {
   return {
-    id: payload["http://store.rerum.io/agent"]?.split("/").pop(),
-    isApproved: payload["http://rerum.io/app_flag"].includes("tpen"),
-    roles: payload["http://rerum.io/user_roles"]?.roles?.filter(r=>r.startsWith("tpen")),
+    id: payload[CLAIMS.AGENT]?.split("/").pop(),
+    isApproved: payload[CLAIMS.APP].includes("tpen"),
+    roles: payload[CLAIMS.ROLES]?.roles?.filter(r=>r.startsWith("tpen")),
     subject: payload.sub,
     issued: payload.iat,
     expires: payload.exp,
-    agent: payload["http://store.rerum.io/agent"],
+    agent: payload[CLAIMS.AGENT],
   }
 }
 
@@ -120,10 +123,7 @@ class AuthCreator extends HTMLInputElement {
   }
 
   connectedCallback() {
-    if (!window.TPEN_USER) {
-      return
-    }
-    this.value = TPEN_USER["http://store.rerum.io/agent"] ?? "anonymous"
+    this.value = TPEN_USER?.agent ?? "anonymous"
   }
 }
 
