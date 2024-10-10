@@ -28,7 +28,7 @@ const webAuth = new auth0.WebAuth({
   domain: DOMAIN,
   clientID: CLIENT_ID,
   scope:
-    "read:roles read:current_user_metadata openid offline_access", 
+    "read:roles read:current_user_metadata profile openid offline_access", 
   redirectUri: returnTo,   
   responseType: "id_token",
   state: urlToBase64(location.href),
