@@ -23,7 +23,7 @@ let manager = new ManagementClient({
   clientId: process.env.CLIENTID,
   clientSecret: process.env.CLIENT_SECRET,
   scope:
-    "create:users read:users read:user_idp_tokens update:users delete:users read:roles create:roles update:roles delete:roles"
+    "create:users read:users read:user_idp_tokens update:users delete:users read:roles create:roles update:roles delete:roles read:resource_servers delete:resource_servers"
 })
 let authenticator = new AuthenticationClient({
   domain: process.env.DOMAIN,
@@ -94,11 +94,6 @@ router.get("/getAllUsers", async function (req, res, next) {
       return
     }
 
-    const tpenUsers = await manager.users.getAll()
-    let users = tpenUsers.data.filter(user => isTpenUser(user))
-
-    let onerole = await manager.roles.getUsers({ id: ROLES[0]})
-
     const fetchUsersInRoles = ROLES.map((id) => manager.roles.getUsers({ id }))
 
     return Promise.all(fetchUsersInRoles)
@@ -166,7 +161,12 @@ router.post("/assignRole", async function (req, res, next) {
         )
       }
 
-      manager.users.removeRoles({ id: userid }, dataObj)
+      // insane that manager.users.removeRoles doesn't exist
+      // manager.users.removeRoles({ id: userid }, dataObj)
+      manager.resourceServers.delete({
+        id: `users/${userid}/roles`,
+        data: dataObj
+      })
         .then((resp2) => {
           res.status(200)
             .send(`${role[0].toUpperCase()}${role.substr(1)} role was successfully assigned to the user`)
