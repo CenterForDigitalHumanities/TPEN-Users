@@ -138,7 +138,7 @@ router.get("/getAllUsers", async function (req, res, next) {
  * Other roles are removed.
  */
 router.post("/assignRole", async function (req, res, next) {
-  const token = (req.header("Authorization") ?? "")?.replace("Bearer ", "")
+  const token = (req.header("Authorization") ?? "")
   const { userid, role } = req.body
   const roleID = process.env[`ROLE_${String(role).toUpperCase()}_ID`]
 
@@ -155,8 +155,7 @@ router.post("/assignRole", async function (req, res, next) {
     return
   }
 
-  manager
-    .assignRolestoUser({ id: userid }, { roles: [roleID] })
+  manager.users.assignRoles({ id: userid }, { roles: [roleID] })
     .then((result) => {
       // Super odd. On success, the response is an empty string...
       // unassign from other non-admin Tpen roles
@@ -167,16 +166,10 @@ router.post("/assignRole", async function (req, res, next) {
         )
       }
 
-      manager
-        .removeRolesFromUser({ id: userid }, dataObj)
+      manager.users.removeRoles({ id: userid }, dataObj)
         .then((resp2) => {
-          res
-            .status(200)
-            .send(
-              `${role[0].toUpperCase()}${role.substr(
-                1
-              )} role was successfully assigned to the user`
-            )
+          res.status(200)
+            .send(`${role[0].toUpperCase()}${role.substr(1)} role was successfully assigned to the user`)
         })
         .catch((err) => {
           res.status(500).send(err)
