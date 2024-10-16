@@ -68,7 +68,7 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
         <p>${user.name}</p>
         <img src="${user.picture}">
         <span class="role badge" userid="${user.user_id}">${user?.roles?.join(", ")}</span>
-        <select class="select-role" name="${user.user_id}">
+        <select class="select-role" name="${user.user_id}" disabled>
       ${ROLES.map(role => `
         <option ${user.roles.includes(role) ? "selected=true" : ""} value="${role}">${role}</option>
       `).join("")}
