@@ -2,125 +2,135 @@
  * @module AuthButton Adds custom element for login/logout of Auth0, based on configuration below.
  * @author cubap
  *
- * @description This module includes a custom `<button is="auth-button">` element for authentication within
- * the Dunbar Public Library and Archive Project.
+ * @description This module includes a custom `<button is="auth-button">` element for authentication
  * Notes:
  * - Include this module and a button[is='auth-button'] element to use.
  * - Add the `disabled` property on any page that should be available to the public, but knowing the user may be helpful.
  * - This can be made more generic by passing in the constants and parameterizing {app:'tpen'}.
  */
 
-import "https://cdn.auth0.com/js/auth0/9.19.0/auth0.min.js"
+import "./jwt.js"
 
-const AUDIENCE = "https://cubap.auth0.com/api/v2/"
-const ISSUER_BASE_URL = "cubap.auth0.com"
-const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
-const DOMAIN = "cubap.auth0.com"
+function authenticateInterfaces(returnTo) {
+  const incomingToken = new URLSearchParams(window.location.search).get("idToken")
+  const authenticatedElements = document.querySelectorAll('[requires-auth]')
+  if(authenticatedElements.length === 0) {
+    return
+  }
 
-const returnTo = origin
+  const userToken = incomingToken ?? localStorage.getItem("TPEN_USER").authentication
+  
+  // Redirect to login if no userToken
+  if(!userToken) {
+    login(location.href ?? origin)
+  }
+  
+  // Override the userToken if it is in the query string
+  const TPEN_USER = !incomingToken ? localStorage.getItem("TPEN_USER") 
+    : ()=> {
+      let userData
+      try {
+        userData = jwtDecode(userToken)
+      } catch (e) {
+        localStorage.removeItem("TPEN_USER")
+        delete window.TPEN_USER
+        document
+          .querySelectorAll('[requires-auth]')
+          .forEach((el) => {
+            el.setAttribute("tpen-user", "")
+            el.setAttribute("tpen-token-expires", "")
+            delete el.tpenAuthToken
+          })
+        console.error(e)
+        return
+      }
+      const user = {}
+      user.authentication = userToken
+      user.id = userData["http://store.rerum.io/agent"]?.split("/").pop()
+      user.expires = userData.exp
+      return user
+    }
+  authenticatedElements.forEach(el => {
+    el.setAttribute("tpen-user", TPEN_USER.id)
+    el.setAttribute("tpen-token-expires", TPEN_USER.expires)
+    el.tpenAuthToken = userToken
+  })
+  localStorage.setItem("TPEN_USER", TPEN_USER)
+}
 
-const webAuth = new auth0.WebAuth({
-  domain: DOMAIN,
-  clientID: CLIENT_ID,
-  audience: AUDIENCE,
-  scope:
-    "read:roles update:current_user_metadata name nickname picture email profile openid offline_access", 
-  redirectUri: returnTo,   
-  responseType: "id_token token",
-  state: urlToBase64(location.href),
-})
-
-const logout = () => {
-  localStorage.removeItem("userToken")
+function logout(redirect=location.href) {
+  localStorage.removeItem("TPEN_USER")
   delete window.TPEN_USER
   document
-    .querySelectorAll('[is="auth-creator"]')
-    .forEach((el) => el.connectedCallback())
-  webAuth.logout({ returnTo }) 
+    .querySelectorAll('[requires-auth]')
+    .forEach((el) => {
+      el.setAttribute("tpen-user", "")
+      el.setAttribute("tpen-token-expires", "")
+      delete el.tpenAuthToken
+    })
+  location.href = `https://three.t-pen.org/logout?returnTo=${encodeURIComponent(redirect)}`
 }
-const login = (custom) =>
-  webAuth.authorize(Object.assign({ authParamsMap: { app: "tpen" } }, custom))
 
-const getReferringPage = () => {
-  try {
-    return b64toUrl(location.hash.split("state=")[1].split("&")[0])
-  } catch (err) {
-    return false
+function login(redirect=location.href) {
+  location.href = `https://three.t-pen.org/login?returnTo=${encodeURIComponent(redirect)}`
+}
+
+class TpenAuth extends HTMLElement {
+  static get observedAttributes() {
+    return ["tpen-user", "tpen-token-expires"]
   }
-}
 
-class AuthButton extends HTMLButtonElement {
   constructor() {
     super()
-    this.onclick = logout
     this.login = login
     this.logout = logout
   }
 
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === "tpen-user") {
+      this.dispatchEvent(
+        new CustomEvent("user-login", {
+          detail: { user: newValue },
+        })
+      )
+    }
+    if (name === "tpen-token-expires") {
+        this.expiring = setTimeout(() => {        
+        this.dispatchEvent(
+          new CustomEvent("token-expiration", {
+            detail: { expires: newValue },
+          })
+        )
+      }, newValue - Date.now())
+    }
+  }
+
   connectedCallback() {
-    webAuth.checkSession({}, (err, result) => {
-      if (err) {
-        if (this.getAttribute("disabled") !== null) {
-          return
-        }
-        login()
-      }
-      const ref = getReferringPage()
-      if (ref && ref !== location.href) {
-        location.href = ref
-      }
-      localStorage.setItem("userToken", result.idToken)
-      window.TPEN_USER = result.idTokenPayload
-      window.TPEN_USER.authorization = result.accessToken
-      document
-        .querySelectorAll('[is="auth-creator"]')
-        .forEach((el) => el.connectedCallback())
-      this.innerText = `Logout ${TPEN_USER.nickname}`
-      this.removeAttribute("disabled")
-      const loginEvent = new CustomEvent("tpen-authenticated", {
-        detail: window.TPEN_USER,
+    const returnTo = this.getAttribute("returnTo")
+    if (window.authenticating) {
+      window.authenticating.then(() => {
+        authenticateInterfaces(returnTo)
+        delete window.authenticating
       })
-      this.dispatchEvent(loginEvent)
+    } else {
+      window.authenticating = new Promise((resolve) => {
+        authenticateInterfaces(returnTo)
+        resolve()
+      }).then(() => {
+        delete window.authenticating
+      })
+    }
+
+    this.addEventListener("user-login", () => {
+      this.connectedCallback()
+    })
+
+    this.addEventListener("token-expiration", () => {
+      this.addClass("authentication-expired")
     })
   }
 }
 
-customElements.define("auth-button", AuthButton, { extends: "button" })
+customElements.define("tpen-auth", TpenAuth)
 
-class AuthCreator extends HTMLInputElement {
-  constructor() {
-    super()
-  }
-
-  connectedCallback() {
-    if (!window.TPEN_USER) {
-      return
-    }
-    this.value = TPEN_USER["http://store.rerum.io/agent"] ?? "anonymous"
-  }
-}
-
-customElements.define("auth-creator", AuthCreator, { extends: "input" })
-
-/**
- * Follows the 'base64url' rules to decode a string.
- * @param {String} base64str from `state` parameter in the hash from Auth0
- * @returns referring URL
- */
-function b64toUrl(base64str) {
-  return window.atob(base64str.replace(/\-/g, "+").replace(/_/g, "/"))
-}
-/**
- * Follows the 'base64url' rules to encode a string.
- * @param {String} url from `window.location.href`
- * @returns encoded string to pass as `state` to Auth0
- */
-function urlToBase64(url) {
-  return window
-    .btoa(url)
-    .replace(/\//g, "_")
-    .replace(/\+/g, "-")
-    .replace(/=+$/, "")
-}
-
-export default { AuthButton, AuthCreator }
+export default TpenAuth

@@ -38,7 +38,7 @@ auth.addEventListener("tpen-authenticated", (ev) => {
         document
           .querySelector(`[data-${prop}]`)
           ?.setAttribute(`data-${prop}`, ev.detail[prop])
-      } catch (err) {}
+      } catch (err) { }
     }
     document.querySelector(
       `[data-picture]`
@@ -52,48 +52,45 @@ auth.addEventListener("tpen-authenticated", (ev) => {
 const ROLES = ["inactive", "public"]
 
 async function adminOnly(token = window.TPEN_USER?.authorization) {
-  const intros = document.getElementsByClassName("intro")
-
   let userRoles = TPEN_USER["http://rerum.io/user_roles"]?.roles
   //You can trust the token.  However, it may have expired.
   //A token was in localStorage, so there was a login during this window session.
   //An access token from login is stored. Let's use it to get THIS USER's info.  If it fails, the user needs to login again.
   try {
-    userList.innerHTML = ""
-    if (isAdmin(token)) {
-      const user_arr = await getAllUsers()
+    if (!isAdmin(token)) {
+      showUserProfile(userRoles)
+      return
+    }
+    const user_arr = await getAllUsers()
 
-      let elem = ``
-      for (const user of user_arr) {
-        elem += `<li user="${user.name}">
-                <p>${user.name}</p>
-                <img src="${user.picture}">
-                <span class="role badge" userid="${
-                  user.user_id
-                }">${user?.roles?.join(", ")}</span>
-                <select class="select-role" name="${user.user_id}">
-                    ${ROLES.reduce((a, b) => {
-                      return (a += `<option ${
-                        user.roles.includes(b) ? "selected=true" : ""
-                      } value="${b}">${b}</option>`)
-                    }, ``)}
-                </select>
-            </li>`
-      }
-      listHeading.innerHTML = `<h4> TPEN3 User List</h4>`
-      userList.innerHTML += elem
-      userList.querySelectorAll("select").forEach((el) => {
-        el.addEventListener("input", (event) =>
-          assignRole(event.target.name, event.target.value)
-        )
-      })
-    } else {
-      for (let intro of intros) {
-        intro.classList.add("hide-content")
-      }
+    const elem = user_arr.map(user => `
+      <li user="${user.name}">
+        <p>${user.name}</p>
+        <img src="${user.picture}">
+        <span class="role badge" userid="${user.user_id}">${user?.roles?.join(", ")}</span>
+        <select class="select-role" name="${user.user_id}">
+      ${ROLES.map(role => `
+        <option ${user.roles.includes(role) ? "selected=true" : ""} value="${role}">${role}</option>
+      `).join("")}
+        </select>
+      </li>
+          `).join("")
+    listHeading.innerText = 'TPEN3 User List'
+    userList.innerHTML += elem
+    userList.querySelectorAll("select").forEach((el) => {
+      el.addEventListener("input", (event) =>
+        assignRole(event.target.name, event.target.value)
+      )
+    })
+  } catch (_err) {
+    alert("not admin. boop.")
+  }
+  history.replaceState(null, null, " ")
+}
 
-      listHeading.innerHTML = `<h4>User Profile</h4>`
-      userList.innerHTML = `
+function showUserProfile(userRoles) {
+  listHeading.innerHTML = `<h4>User Profile</h4>`
+  userList.innerHTML = `
            <div>
             <div>
             <h5>${TPEN_USER.nickname}  </h5>
@@ -102,19 +99,13 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
             </div>
              <img src="${TPEN_USER.picture}">
             <p>(${userRoles
-              .map((role) =>
-                role.includes("tpen") ? capitalizeName(role) : null
-              )
-              .filter((role) => role)
-              .join(", ")})</p>
+      .map((role) => role.includes("tpen") ? capitalizeName(role) : null
+      )
+      .filter((role) => role)
+      .join(", ")})</p>
 
            </div>
             `
-    }
-  } catch (_err) {
-    alert("not admin. boop.")
-  }
-  history.replaceState(null, null, " ")
 }
 
 async function assignRole(userid, role) {
