@@ -94,10 +94,12 @@ router.get("/getAllUsers", async function (req, res, next) {
       return
     }
 
-    const allUsers = await manager.users.getAll()
-    const fetchUsersInRoles = ROLES.map((id) =>
-      manager.getUsersInRole({ id })
-    )
+    const tpenUsers = await manager.users.getAll()
+    let users = tpenUsers.data.filter(user => isTpenUser(user))
+
+    let onerole = await manager.roles.getUsers({ id: ROLES[0]})
+
+    const fetchUsersInRoles = ROLES.map((id) => manager.roles.getUsers({ id }))
 
     return Promise.all(fetchUsersInRoles)
       .then((userGroups) => {
@@ -105,32 +107,19 @@ router.get("/getAllUsers", async function (req, res, next) {
 
         // get users in groups according to roles, attach role tag to user object, merge roles of users that appear in multiple groups
 
-        const mergedUserInfo = {}
+        const allUsers = {}
 
-        ROLES.map((_, i) => {
-          userGroups.map((eachGroup, j) => {
-            eachGroup.map((user) => {
-              if (!user.roles) user.roles = []
-              if (i == j && !user.roles.includes(roleNames[i])) {
-                user.roles.push(roleNames[i])
-              }
-
-              const { email, roles, ...otherProps } = user
-
-              if (mergedUserInfo[email]) {
-                mergedUserInfo[email].roles.push(
-                  ...roles.filter(
-                    (role) => !mergedUserInfo[email].roles.includes(role)
-                  )
-                )
-              } else {
-                mergedUserInfo[email] = { email, roles, ...otherProps }
-              }
-            })
+        userGroups.forEach((group, i) => {
+          group.data.forEach( user => {
+            if (!allUsers[user.user_id]) {
+              allUsers[user.user_id] = { ...user, roles: [ roleNames[i] ] }
+            } else {
+              allUsers[user.user_id].roles.push(roleNames[i])
+            }
           })
         })
 
-        const flattenedUsers = Object.values(mergedUserInfo)
+        const flattenedUsers = Object.values(allUsers)
 
         res.json(flattenedUsers)
       })
@@ -227,10 +216,7 @@ function isAdmin(userToken) {
  *  Given a user profile, check if that user belongs to a Tpen App.
  */
 function isTpenUser(user) {
-  return (
-    user[process.env.TPEN3_APP_CLAIM] &&
-    user[process.env.TPEN3_APP_CLAIM] === "tpen"
-  )
+  return user.app_metadata?.app?.includes("tpen")
 }
 
 function extractUser(token) {

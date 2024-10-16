@@ -76,7 +76,7 @@ async function adminOnly(token = window.TPEN_USER?.authorization) {
       </li>
           `).join("")
     listHeading.innerText = 'TPEN3 User List'
-    userList.innerHTML += elem
+    userList.innerHTML = elem
     userList.querySelectorAll("select").forEach((el) => {
       el.addEventListener("input", (event) =>
         assignRole(event.target.name, event.target.value)
@@ -93,7 +93,7 @@ function showUserProfile(userRoles) {
   userList.innerHTML = `
            <div>
             <div>
-            <h5>${TPEN_USER.nickname}  </h5>
+            <h5>${TPEN_USER.nickname ?? TPEN_USER.name}  </h5>
             <small>${TPEN_USER.email}</small>
 
             </div>
