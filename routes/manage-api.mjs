@@ -88,13 +88,13 @@ let authenticator = new AuthenticationClient({
  */
 router.get("/getAllUsers", async function (req, res, next) {
   let token = req.header("Authorization") ?? ""
-  token = token.replace("Bearer ", "")
   try {
     if (!isAdmin(token)) {
       res.status(403).send("You are not an admin")
       return
     }
 
+    const allUsers = await manager.users.getAll()
     const fetchUsersInRoles = ROLES.map((id) =>
       manager.getUsersInRole({ id })
     )
@@ -219,7 +219,7 @@ function getURLHash(variable, url) {
  *  Given a user profile, check if that user is a Tpen Apps admin.
  */
 function isAdmin(userToken) {
-  let roles = extractUser(userToken).roles ?? []
+  let roles = extractUser(userToken)[process.env.TPEN3_ROLES_CLAIM].roles ?? []
   return roles.includes("tpen_user_admin")
 }
 
@@ -235,12 +235,7 @@ function isTpenUser(user) {
 
 function extractUser(token) {
   let userInfo = JSON.parse(
-    Buffer.from(
-      token.includes("Bearer")
-        ? token.split(" ")[1].split(".")[1]
-        : token.split(".")[1],
-      "base64"
-    ).toString()
+    Buffer.from(token.split(".")[1], "base64").toString()
   )
 
   return userInfo
