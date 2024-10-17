@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import dotenv from "dotenv"
 dotenv.config()
-import {ManagementClient, AuthenticationClient} from "auth0"
+import { ManagementClient, AuthenticationClient } from "auth0"
 
 import express from "express"
 const router = express.Router()
@@ -23,7 +23,7 @@ let manager = new ManagementClient({
   clientId: process.env.CLIENTID,
   clientSecret: process.env.CLIENT_SECRET,
   scope:
-    "create:users read:users read:user_idp_tokens update:users delete:users read:roles create:roles update:roles delete:roles"
+    "create:users read:users read:user_idp_tokens update:users delete:users read:roles create:roles update:roles delete:roles read:resource_servers delete:resource_servers"
 })
 let authenticator = new AuthenticationClient({
   domain: process.env.DOMAIN,
@@ -88,63 +88,38 @@ let authenticator = new AuthenticationClient({
  */
 router.get("/getAllUsers", async function (req, res, next) {
   let token = req.header("Authorization") ?? ""
-  token = token.replace("Bearer ", "")
   try {
-    authenticator
-      .getProfile(token)
-      .then(async (current_tpen_users) => {
-        if (!isAdmin(current_tpen_users)) {
-          res.status(403).send("You are not an admin")
-          return
-        }
+    if (!isAdmin(token)) {
+      res.status(403).send("You are not an admin")
+      return
+    }
 
-        const fetchUsersInRoles = ROLES.map((id) =>
-          manager.getUsersInRole({id})
-        )
+    const fetchUsersInRoles = ROLES.map((id) => manager.roles.getUsers({ id }))
 
-        return Promise.all(fetchUsersInRoles)
-          .then((userGroups) => {
-            const roleNames = ["admin", "inactive", "public"] //the order of this must match the order of ROLES above
+    return Promise.all(fetchUsersInRoles)
+      .then((userGroups) => {
+        const roleNames = ["admin", "inactive", "public"] //the order of this must match the order of ROLES above
 
-            // get users in groups according to roles, attach role tag to user object, merge roles of users that appear in multiple groups
+        // get users in groups according to roles, attach role tag to user object, merge roles of users that appear in multiple groups
 
-            const mergedUserInfo = {}
+        const allUsers = {}
 
-            ROLES.map((_, i) => {
-              userGroups.map((eachGroup, j) => {
-                eachGroup.map((user) => {
-                  if (!user.roles) user.roles = []
-                  if (i == j && !user.roles.includes(roleNames[i])) {
-                    user.roles.push(roleNames[i])
-                  }
-
-                  const {email, roles, ...otherProps} = user
-
-                  if (mergedUserInfo[email]) {
-                    mergedUserInfo[email].roles.push(
-                      ...roles.filter(
-                        (role) => !mergedUserInfo[email].roles.includes(role)
-                      )
-                    )
-                  } else {
-                    mergedUserInfo[email] = {email, roles, ...otherProps}
-                  }
-                })
-              })
-            })
-
-            const flattenedUsers = Object.values(mergedUserInfo)
-
-            res.json(flattenedUsers)
+        userGroups.forEach((group, i) => {
+          group.data.forEach( user => {
+            if (!allUsers[user.user_id]) {
+              allUsers[user.user_id] = { ...user, roles: [ roleNames[i] ] }
+            } else {
+              allUsers[user.user_id].roles.push(roleNames[i])
+            }
           })
-          .catch((err) => {
-            res.status(500).send(err)
-          })
+        })
+
+        const flattenedUsers = Object.values(allUsers)
+
+        res.json(flattenedUsers)
       })
       .catch((err) => {
-        console.log(err)
-        res.status(500)
-        next(err)
+        res.status(500).send(err)
       })
   } catch (err) {
     next(err)
@@ -158,8 +133,8 @@ router.get("/getAllUsers", async function (req, res, next) {
  * Other roles are removed.
  */
 router.post("/assignRole", async function (req, res, next) {
-  const token = (req.header("Authorization") ?? "")?.replace("Bearer ", "")
-  const {userid, role} = req.body
+  const token = (req.header("Authorization") ?? "")
+  const { userid, role } = req.body
   const roleID = process.env[`ROLE_${String(role).toUpperCase()}_ID`]
 
   // Guards
@@ -170,42 +145,31 @@ router.post("/assignRole", async function (req, res, next) {
     res.status(406).send("Failed to provide data for assignment")
     return
   }
+  if (!isAdmin(token)) {
+    res.status(403).send("Unable to authorize request by non-administrator")
+    return
+  }
 
-  // Confirm Admin
-  authenticator
-    .getProfile(token)
-    .then((user) => {
-      if (!isAdmin(user)) {
-        res.status(403).send("Unable to authorize request by non-administrator")
-        return
+  manager.users.assignRoles({ id: userid }, { roles: [roleID] })
+    .then((result) => {
+      // Super odd. On success, the response is an empty string...
+      // unassign from other non-admin Tpen roles
+      const dataObj = {
+        roles: ROLES.filter(
+          (justAdded) =>
+            justAdded !== roleID && justAdded !== process.env.ROLE_ADMIN_ID
+        )
       }
 
-      manager
-        .assignRolestoUser({id: userid}, {roles: [roleID]})
-        .then((result) => {
-          // Super odd. On success, the response is an empty string...
-          // unassign from other non-admin Tpen roles
-          const dataObj = {
-            roles: ROLES.filter(
-              (justAdded) =>
-                justAdded !== roleID && justAdded !== process.env.ROLE_ADMIN_ID
-            )
-          }
-
-          manager
-            .removeRolesFromUser({id: userid}, dataObj)
-            .then((resp2) => {
-              res
-                .status(200)
-                .send(
-                  `${role[0].toUpperCase()}${role.substr(
-                    1
-                  )} role was successfully assigned to the user`
-                )
-            })
-            .catch((err) => {
-              res.status(500).send(err)
-            })
+      // insane that manager.users.removeRoles doesn't exist
+      // manager.users.removeRoles({ id: userid }, dataObj)
+      manager.resourceServers.delete({
+        id: `users/${userid}/roles`,
+        data: dataObj
+      })
+        .then((resp2) => {
+          res.status(200)
+            .send(`${role[0].toUpperCase()}${role.substr(1)} role was successfully assigned to the user`)
         })
         .catch((err) => {
           res.status(500).send(err)
@@ -236,11 +200,8 @@ function getURLHash(variable, url) {
 /**
  *  Given a user profile, check if that user is a Tpen Apps admin.
  */
-function isAdmin(user) {
-  let roles = {roles: []}
-  if (user[process.env.TPEN3_ROLES_CLAIM]) {
-    roles = user[process.env.TPEN3_ROLES_CLAIM].roles ?? {roles: []}
-  }
+function isAdmin(userToken) {
+  let roles = extractUser(userToken)[process.env.TPEN3_ROLES_CLAIM].roles ?? []
   return roles.includes("tpen_user_admin")
 }
 
@@ -248,10 +209,15 @@ function isAdmin(user) {
  *  Given a user profile, check if that user belongs to a Tpen App.
  */
 function isTpenUser(user) {
-  return (
-    user[process.env.TPEN3_APP_CLAIM] &&
-    user[process.env.TPEN3_APP_CLAIM] === "tpen"
+  return user.app_metadata?.app?.includes("tpen")
+}
+
+function extractUser(token) {
+  let userInfo = JSON.parse(
+    Buffer.from(token.split(".")[1], "base64").toString()
   )
+
+  return userInfo
 }
 
 export default router
