@@ -14,8 +14,8 @@ import "https://cdn.auth0.com/js/auth0/9.19.0/auth0.min.js"
 
 const CLIENT_ID = "bBugFMWHUo1OhnSZMpYUXxi3Y1UJI7Kl"
 const DOMAIN = "cubap.auth0.com"
-const PROFILE_SERVICE = "https://dev.api.t-pen.org/my/profile/"
-//const PROFILE_SERVICE = "https://api.t-pen.org/my/profile/"
+//const PROFILE_SERVICE = "https://dev.api.t-pen.org/my/profile/"
+const PROFILE_SERVICE = "https://api.t-pen.org/my/profile/"
 const CLAIMS = {
   AGENT : "http://store.rerum.io/agent",
   APP : "http://rerum.io/app_flag",
